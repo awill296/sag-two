@@ -1,0 +1,5 @@
+Column,Ready,Variate,LevelOfMeasurement
+Mean,1,1,3
+Std,1,1,4
+Correlation-Spearman,1,2,2
+Correlation-Pearson,0,2,3

@@ -1,0 +1,9 @@
+Column,Response,Predictor,Datatype,LevelOfMeasurement
+Sample,0,0,int,2
+NDS,1,0,int,2
+HeartRate@20Mins,0,1,float,4
+HeartRate@40Mins,0,1,float,4
+HeartRate@60Mins,1,0,float,4
+MAP@20Mins,0,1,float,4
+MAP@40Mins,0,1,float,4
+MAP@60Mins,1,0,float,4
