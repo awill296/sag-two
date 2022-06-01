@@ -37,10 +37,10 @@ Note: Selection of Predictor variables and Measures is optional.
 		the System will display the requested Measures 
 		for the Predictor variable alone and not calculate a Proposition.
 
-#. Available Items in v2:
+#. Available Items in v1:
 00. Response Variables: NDS, HR @60 min, MAP @60min
 01. Predictor Variables: HR @20 min, HR @40min, MAP @20min, MAP @40min
-02. Measures: Mean, Standard Deviation, Spearman's Rank Correlation Coefficient, Pearson Correlation Coefficient
+02. Measures: Mean, Standard Deviation, Spearman's Rank Correlation Coefficient
 03. Propositions: Linear Regression, Logistic Regression, Neural Network
 05. Model Configuration Settings: 
 	All: Random Seed, Percent of Data to use in Training vs Testing 
@@ -57,21 +57,16 @@ Warning: Due to the low sample size of data available in v1, changes to the Rand
 	Percent Training Data, and Binarization Threshold Percent may cause errors 
 	due to insufficient data variation. 
 	
-#. Items in-progress for v2::
+#. Items drafted but not yet implemented in v1:
 00. Applying Measures and Propositions only with appropriate variable Level of Measurement 
-01. Proposition: Decision Tree (allows for inferences on Nominal data and has high interpretability)
-02. Display: Scatter plot for Proposition:Linear Regression, Node-Graph for Proposition:Neural Network, Node-Graph for Proposition:Decision Tree
-03. Increase number of samples
-04. Add EEG Predictor variables
-05. Add EEG Response Variables
-06. Predictor variables listed only when causally valid for chosen Response variable
-07. Experimental cohort selection (feature request)
-08. Add NDS subscores
-09. Add full list of available subjects
+01. Measure: Pearson Correlation Coefficient (need a higher sample size before this would be valid)
+02. Proposition: Decision Tree (allows for inferences on Nominal data and has high interpretability)
+03. Display: Scatter plot for Proposition:Linear Regression, Node-Graph for Proposition:Neural Network 
 
 #. Items Planned for future versions:
+v2. higher sample size, additional predictor and response variables, v1 backlog (see above)
 v3. time series analysis, functions of data as predictor and response variables (e.g. entropy), more model configuration settings
-	, proposition tutorials (feature request), model R^2 (feature request)
+	, proposition tutorials (feature request), experimental cohort selection (feature request), model R^2 (feature request)
 v4 (draft). replace csvs with database of experimental data, ability to download results, add login security (feature request)
 v5 (draft). additional validation methods, additional propositions, model stacking
 """
