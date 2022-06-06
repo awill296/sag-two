@@ -38,8 +38,12 @@ Note: Selection of Predictor variables and Measures is optional.
 		for the Predictor variable alone and not calculate a Proposition.
 
 #. Available Items in v2:
-00. Response Variables: NDS, HR @60 min, MAP @60min
-01. Predictor Variables: HR @20 min, HR @40min, MAP @20min, MAP @40min
+00. Response Variables: HR @60 min; MAP @60min; NDS
+        NDS Subscores (Behavior, Brainstem_Function, General_Behavioral
+            , Motor_Assessment, Motor_Behavior, Seizures, Sensory_Assessment)
+01. Predictor Variables: HR @20,40 min; MAP @20,40min; Burst Period Start, End, and Duration;
+        Electrode {1,2}>{Power,Shannon Entropy,Tsallis Entropy,Power Fraction,Shannon Entropy Fraction, Tsallis Entropy Fraction}
+            >{Delta,Theta,Alpha,Beta,Gamma,SuperGamma}>{AUC,IQR,MAD,Max,Mean,Median,Min,Range,Spot,STD}>@20,40,60Mins
 02. Measures: Mean, Standard Deviation, Spearman's Rank Correlation Coefficient, Pearson Correlation Coefficient
 03. Propositions: Linear Regression, Logistic Regression, Neural Network
 05. Model Configuration Settings: 
@@ -56,22 +60,38 @@ Note: Selection of Predictor variables and Measures is optional.
 Warning: Due to the low sample size of data available in v1, changes to the Random Seed, 
 	Percent Training Data, and Binarization Threshold Percent may cause errors 
 	due to insufficient data variation. 
-	
-#. Items in-progress for v2::
+
+#. Items in-progress for v2:
+C01. Add Ziwei burst data
+C02. Add NDS subscores from YuGuo datasheets
+C03. Add EEG Predictor and Response Variables from YuGuo data
+C04. Add full list of available subjects and ready marker to datafile
+00. Add variable arguments to genfielddict 
+00. Measures: 
+            Bivariate: Chi-Square Test, Covariance
+            Univariate simple: Mode, Mean, IQR, Range, Min, Max, Skew, Kurtosis
+            Univariate: Median Absolute Deviation (median of abs dev from median), Relative Standard Deviation ( std/mean )
+00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
+            , Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
+            , Univariate: Box-and-whisker plot
+            , Bivariate: Scatter Plots
+10. Propositions: Decision Tree (allows for inferences on Nominal data and has high interpretability)
+                    Linear Discrimint Analysis
+                    Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables)
+                    Support Vector Machine
+00. Add Autumn burst data from MATLAB
+00. Add code to process cohorts file and ready marker
+00. Update Measures and Predictors to be collapsible trees instead of Checklists
+00. Expand list of available Response variables
+00. Predictor variables listed only when causally valid for chosen Response variable
 00. Applying Measures and Propositions only with appropriate variable Level of Measurement 
-01. Proposition: Decision Tree (allows for inferences on Nominal data and has high interpretability)
-02. Display: Scatter plot for Proposition:Linear Regression, Node-Graph for Proposition:Neural Network, Node-Graph for Proposition:Decision Tree
-03. Increase number of samples
-04. Add EEG Predictor variables
-05. Add EEG Response Variables
-06. Predictor variables listed only when causally valid for chosen Response variable
-07. Experimental cohort selection (feature request)
-08. Add NDS subscores
-09. Add full list of available subjects
 
 #. Items Planned for future versions:
 v3. time series analysis, functions of data as predictor and response variables (e.g. entropy), more model configuration settings
-	, proposition tutorials (feature request), model R^2 (feature request)
+	, proposition tutorials (feature request), model R^2 (feature request), experimental cohort selection (feature request)
 v4 (draft). replace csvs with database of experimental data, ability to download results, add login security (feature request)
 v5 (draft). additional validation methods, additional propositions, model stacking
+
+#. Items specifically not Planned for future versions:
+	Cramer von Mises, Cohen's Kappa, Poisson Regression
 """
