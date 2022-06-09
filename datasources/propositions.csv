@@ -1,8 +1,7 @@
 Column,Ready,LevelOfMeasurement,Intercept,Magnitude,Binthresh,Layers,Nodes,Learnrate
 Decision-Tree,0,1,0,0,0,1,1,0
-Linear-Discriminant-Analysis,0,3,1,1,0,1,0,1
+Linear-Discriminant-Analysis,0,3,0,0,1,0,0,1
 Linear-Regression,1,3,1,0,0,0,0,0
 Logistic-Regression,1,3,1,1,1,0,0,0
 Neural-Network,1,3,0,1,0,1,1,1
 Support-Vector-Machine,0,3,1,1,1,0,0,1
-Tests-for-Normality,0,2,0,0,0,0,0,0

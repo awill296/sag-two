@@ -1,15 +1,19 @@
 from collections import OrderedDict; from dash import ALL, dcc, html, Input, MATCH, Output, State;
 from flask import Markup; from IPython.display import display, Markdown;
 from matplotlib.ticker import MaxNLocator; from plotly.subplots import make_subplots;
-from plotly.tools import mpl_to_plotly; from sklearn.metrics import accuracy_score, roc_curve, auc;
-from scipy.stats import pearsonr,spearmanr; from tensorflow.keras import layers, models, losses; 
+from plotly.tools import mpl_to_plotly; from sklearn import svm,tree;
+from sklearn.metrics import accuracy_score, roc_curve, auc;
+from scipy.stats import iqr,kurtosis,median_abs_deviation,mode,pearsonr,spearmanr,skew; 
+from tensorflow.keras import layers, models, losses; 
 from torch.utils.data import TensorDataset, DataLoader;
-import dash; import math; import matplotlib.pyplot as plt; import networkx as nx; import numpy as np;
-import numpy.random as rnd; import pandas as pd; import os; import PIL; import plotly.express as px;
-import plotly.graph_objects as go; import requests as rq; import seaborn as sns; import sklearn as skl; 
-import sklearn.linear_model as lm; import statsmodels as sm; import statsmodels.api as sma; 
-import statsmodels.formula.api as smf; import requests as rq; import tensorflow as tf; import torch; 
-import torch.nn as nn; import torch.nn.functional as F; import torch.optim as optim; import torchvision; 
+import dash; import dash_useful_components as duc; import math; import matplotlib.pyplot as plt; 
+import networkx as nx; import numpy as np; import numpy.random as rnd; import pandas as pd;
+import os; import PIL; import plotly.express as px; import plotly.graph_objects as go; 
+import requests as rq; import seaborn as sns; import sklearn as skl; import sklearn.linear_model as lm; 
+import sklearn.discriminant_analysis as lda; import statistics as stttx;
+import statsmodels as sm; import statsmodels.api as sma; import statsmodels.formula.api as smf; 
+import requests as rq; import tensorflow as tf; import torch; import torch.nn as nn; 
+import torch.nn.functional as F; import torch.optim as optim; import torchvision; 
 import torchvision.transforms as transforms; import urllib.request; import warnings;
 
 # file settings
@@ -19,7 +23,7 @@ pd.set_option('display.max_rows',999); pd.set_option('display.width', 200);
 
 # global settings
 MRL = 3; #Measure Rounding Level
-folder = "datasources"; files = ["datafile.csv","schema.csv","measures.csv","propositions.csv"]
+folder = "datasources"; files = ["cohorts.csv","datafile.csv","measures.csv","propositions.csv","schema.csv"]
 subtitles = {'Title1':"Thakor Lab",
 			'Title2':"Cerebrovascular Autoregulation and Post-Cardiac Arrest Resuscitation Therapies Team",
 			'Title3':"Statistical Analysis GUI, v1.0",
@@ -35,7 +39,7 @@ subtitles = {'Title1':"Thakor Lab",
 			'Step13':"Table of Requested Measure(s)",'Step14':"Details of Requested Model"};
 
 # globalized variables:
-# df_Raw; df_Schema; df_Meas; df_Prop;
+# df_DataProc; df_Schema; df_Meas; df_Prop;
 # namesPred; namesResp; namesMeas; namesProp;
 # uniList
 
@@ -53,10 +57,13 @@ def serve_layout():
 						 ,id={'type':'selector-uni', 'role':'choice', 'index': 'resp'},value = 1, disabled = False),
 			html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'resp'}, n_clicks=0)
 		], id={'type':'div', 'role': 'prompt', 'index': 'init'}),
+#TODO Update Measures and Predictors to be collapsible trees instead of Checklists
 		html.Div(style={'visibility':'hidden'}, children=[
 				html.H3(subtitles['Step04']),
-				dcc.Checklist(options= [{'label': v, 'value': k} for k, v in namesPred.items()]
-							  ,id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}),
+				html.Div(duc.CheckBoxTree(id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}
+											,nodes=genCBT(namesPred), showNodeIcon=False)),
+				#dcc.Checklist(options= [{'label': v, 'value': k} for k, v in namesPred.items()]
+							  #,id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}),
 				html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'pred'}, n_clicks=0)
 		], id={'type':'div', 'role': 'prompt', 'index': 'resp'}),
 		html.Div(style={'visibility':'hidden'}, children=[
@@ -226,7 +233,7 @@ def hidePrevSubmit(n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.iloc[selProp-1];
+		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
 		if (df_SelProp[name['index'].title()]==1):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
@@ -238,7 +245,7 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.iloc[selProp-1];
+		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
 		if (df_SelProp[name['index'].title()]==1):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
@@ -250,7 +257,7 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.iloc[selProp-1];
+		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
 		if (df_SelProp[name['index'].title()]==1):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
@@ -262,7 +269,7 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.iloc[selProp-1];
+		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
 		if (df_SelProp[name['index'].title()]==1):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
@@ -274,7 +281,7 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.iloc[selProp-1];
+		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
 		if (df_SelProp[name['index'].title()]==1):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
@@ -286,7 +293,7 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.iloc[selProp-1];
+		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
 		if (df_SelProp[name['index'].title()]==1):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
@@ -301,7 +308,7 @@ def displayConfDiv(name,selProp,n_clicks):
 def genHistoRespCB(selResp, n_clicks):
 # validate input -> pass to logic -> format logic result for display
 	if (n_clicks>0):
-		hist, bins = np.histogram(df_Raw[namesResp[selResp]].to_numpy());
+		hist, bins = np.histogram(df_DataProc[namesResp[selResp]].to_numpy());
 		retVal = {'data':[{'x':bins[0:-1],'y':hist,'type':'bar','name':namesResp[selResp]}]
 				  ,'layout':{'title':"Response Variable Histogram"}};
 	else:
@@ -322,7 +329,7 @@ def genHistoPredCB(selPred, n_clicks):
 			selPred.sort();
 			retVal = make_subplots(rows=1, cols=len(selPred)); colIdx=1;
 			for pred in selPred:
-				hist, bins = np.histogram(df_Raw[namesPred[pred]].to_numpy());
+				hist, bins = np.histogram(df_DataProc[namesPred[pred]].to_numpy());
 				retVal.add_trace(go.Bar(x=bins[0:-1],y=hist,name=namesPred[pred]), row=1, col=colIdx)
 				colIdx = colIdx+1;
 	else:
@@ -452,13 +459,14 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 # BEGIN LOGIC FUNCTIONS
 def loadData():
 #. load data files into memory
-	global df_Raw; df_Raw = pd.read_csv(folder+'/'+files[0]);
-	global df_Schema; df_Schema = pd.read_csv(folder+'/'+files[1]);
+	global df_Cohorts; df_Cohorts = pd.read_csv(folder+'/'+files[0]); 
+	global df_DataProc; df_DataProc = pd.read_csv(folder+'/'+files[1]);
+	global df_Meas; df_Meas = pd.read_csv(folder+'/'+files[2]); 
+	global df_Prop; df_Prop = pd.read_csv(folder+'/'+files[3]);
+	global df_Schema; df_Schema = pd.read_csv(folder+'/'+files[4]);
 	global namesResp; namesResp = genFieldDict('Response',df_Schema); 
 	global namesPred; namesPred = genFieldDict('Predictor',df_Schema);
-	global df_Meas; df_Meas = pd.read_csv(folder+'/'+files[2]); 
 	global namesMeas; namesMeas = genFieldDict('Ready',df_Meas); 
-	global df_Prop; df_Prop = pd.read_csv(folder+'/'+files[3]);
 	global namesProp; namesProp = genFieldDict('Ready',df_Prop);
 	global uniList; uniList = genFieldDict('Variate',df_Meas);
 	
@@ -468,13 +476,17 @@ def genFieldDict(req,df):
     fieldDict = dict(enumerate(fieldlist.flatten(), 1));
     #fieldDictInv = dict((v, k) for k, v in fieldDictInv.items());
     return fieldDict;
-    
+
+def genCBT(df_In):
+	
+	return cbt;
+	
 def genMeas(varResp, varPred, varMeas):
 # pull specified values from data sources -> pass to measure switch -> pass back to view
 	retResp = {}; retVal = {}; measList = []; 
 	for meas in varMeas:
 		measList.append(namesMeas[meas]);
-	respVals = df_Raw[namesResp[varResp]];     
+	respVals = df_DataProc[namesResp[varResp]];     
 	for meas in measList:
 		if (meas in uniList.values()):
 			retResp[meas] = calcSwitch(meas,respVals);
@@ -482,7 +494,7 @@ def genMeas(varResp, varPred, varMeas):
 		predDict = {};
 		for varP in varPred:
 			predName = namesPred[varP];
-			predVals = df_Raw[predName];
+			predVals = df_DataProc[predName];
 			retPredCurr = {}; 
 			for meas in measList:
 				if (meas in uniList.values()):
@@ -532,11 +544,11 @@ def calcCorrS(varA,varB):
 def genModel(varResp, varPred, varProp, d_Conf):
 # pull specified values from data sources -> pass to model switch -> pass back to view
     retVal = {}; 
-    respName = namesResp[varResp]; valsResp = df_Raw[respName];
+    respName = namesResp[varResp]; valsResp = df_DataProc[respName];
     valsPred = pd.DataFrame(); 
     for varP in varPred:
         predName = namesPred[varP];
-        valsPred[predName] = df_Raw[predName];
+        valsPred[predName] = df_DataProc[predName];
     propName = namesProp[varProp];
     retVal = modelSwitch(propName,valsResp,valsPred,d_Conf);
     return retVal;
@@ -635,4 +647,4 @@ def setInt(listA,listB):
 app.layout = serve_layout();
 
 if __name__ == '__main__':
-    app.run_server(host='jupyter.biostat.jhsph.edu', port = os.getuid() + 30, debug=False)
+    app.run_server(host='jupyter.biostat.jhsph.edu', port = os.getuid() + 30, debug=True)
