@@ -80,7 +80,7 @@ T00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA
             , Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
             , Univariate: Box-and-whisker plot
             , Bivariate: Scatter Plots
-00. Add Autumn burst data from MATLAB
+G00. Add Autumn burst data from MATLAB
 00. Applying Measures and Propositions only with appropriate variable Level of Measurement 
 00. Predictor variables listed only when causally or logically valid for chosen Response variable
 00. Expand list of available Response variables

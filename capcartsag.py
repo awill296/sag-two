@@ -61,7 +61,7 @@ def serve_layout():
 		html.Div(style={'visibility':'hidden'}, children=[
 				html.H3(subtitles['Step04']),
 				html.Div(duc.CheckBoxTree(id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}
-											,nodes=genCBT(namesPred), showNodeIcon=False)),
+											,nodes=genCBT(df_Schema), showNodeIcon=False)),
 				#dcc.Checklist(options= [{'label': v, 'value': k} for k, v in namesPred.items()]
 							  #,id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}),
 				html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'pred'}, n_clicks=0)
