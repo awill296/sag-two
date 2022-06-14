@@ -57,7 +57,6 @@ def serve_layout():
 						 ,id={'type':'selector-uni', 'role':'choice', 'index': 'resp'},value = 1, disabled = False),
 			html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'resp'}, n_clicks=0)
 		], id={'type':'div', 'role': 'prompt', 'index': 'init'}),
-#TODO Update Measures and Predictors to be collapsible trees instead of Checklists
 		html.Div(style={'visibility':'hidden'}, children=[
 				html.H3(subtitles['Step04']),
 				html.Div(duc.CheckBoxTree(id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}
@@ -329,9 +328,10 @@ def genHistoPredCB(selPred, n_clicks):
 			selPred.sort();
 			retVal = make_subplots(rows=1, cols=len(selPred)); colIdx=1;
 			for pred in selPred:
-				hist, bins = np.histogram(df_DataProc[namesPred[pred]].to_numpy());
-				retVal.add_trace(go.Bar(x=bins[0:-1],y=hist,name=namesPred[pred]), row=1, col=colIdx)
-				colIdx = colIdx+1;
+				if (pred[0]!='#'):
+					hist, bins = np.histogram(df_DataProc[namesPred[pred]].to_numpy());
+					retVal.add_trace(go.Bar(x=bins[0:-1],y=hist,name=namesPred[pred]), row=1, col=colIdx)
+					colIdx = colIdx+1;
 	else:
 		retVal = go.Figure(go.Bar(x=[], y = []))
 		retVal.update_layout(template = None)
@@ -555,16 +555,17 @@ def genMeas(varResp, varPred, varMeas):
     if (len(varPred)>0):
         predDict = {};
         for varP in varPred:
-            predName = namesPred[varP];
-            predVals = df_DataProc[predName];
-            retPredCurr = {}; 
-            for meas in measList:
-                if (meas in uniList.values()):
-                    retPredCurr[meas] = calcSwitch(meas,predVals);
-                else:
-                    retPredCurr[meas] = calcSwitch(meas,predVals,respVals);            
-            predDict[predName] = retPredCurr;
-            retVal['pred'] = predDict;
+			if (pred[0]!='#'):
+				predName = namesPred[varP];
+				predVals = df_DataProc[predName];
+				retPredCurr = {}; 
+				for meas in measList:
+					if (meas in uniList.values()):
+						retPredCurr[meas] = calcSwitch(meas,predVals);
+					else:
+						retPredCurr[meas] = calcSwitch(meas,predVals,respVals);            
+				predDict[predName] = retPredCurr;
+				retVal['pred'] = predDict;
     retVal['resp'] = retResp;
     return retVal;
 
@@ -688,8 +689,9 @@ def genModel(varResp, varPred, varProp, d_Conf):
     respName = namesResp[varResp]; valsResp = df_DataProc[respName];
     valsPred = pd.DataFrame(); 
     for varP in varPred:
-        predName = namesPred[varP];
-        valsPred[predName] = df_DataProc[predName];
+		if (varP[0]!='#'):
+			predName = namesPred[varP];
+			valsPred[predName] = df_DataProc[predName];
     propName = namesProp[varProp];
     retVal = modelSwitch(propName,valsResp,valsPred,d_Conf);
     return retVal;
