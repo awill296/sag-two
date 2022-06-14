@@ -20,6 +20,7 @@ import torchvision; import torchvision.transforms as transforms; import urllib.r
 warnings.simplefilter(action='ignore', category=Warning); sns.set(); np.set_printoptions(threshold=np.inf); 
 pd.set_option('display.max_rows',999); pd.set_option('display.max_columns', 12);  
 pd.set_option('display.max_rows',999); pd.set_option('display.width', 200);
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3';
 
 # global settings
 MRL = 3; #Measure Rounding Level
@@ -59,7 +60,7 @@ def serve_layout():
 		], id={'type':'div', 'role': 'prompt', 'index': 'init'}),
 		html.Div(style={'visibility':'hidden'}, children=[
 				html.H3(subtitles['Step04']),
-				html.Div(duc.CheckBoxTree(id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}
+				html.Div(duc.CheckBoxTree(id={'type':'selector-tree', 'role':'choice', 'index': 'pred'}
 											,nodes=genCBT(), showNodeIcon=False)),
 				#dcc.Checklist(options= [{'label': v, 'value': k} for k, v in namesPred.items()]
 							  #,id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}),
@@ -68,7 +69,7 @@ def serve_layout():
 		html.Div(style={'visibility':'hidden'}, children=[
 			html.H3(subtitles['Step06']),
 			dcc.Checklist(options= [{'label': v, 'value': k} for k, v in namesMeas.items()]
-						  ,id={'type':'selector-multi', 'role':'choice', 'index': 'meas'}),
+						  ,id={'type':'selector-multi', 'role':'choice', 'index': 'meas'},inline=False),
 			html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'meas'}, n_clicks=0)
 		], id={'type':'div', 'role': 'prompt', 'index': 'pred'}),
 		html.Div(style={'visibility':'hidden'}, children=[
@@ -184,7 +185,19 @@ def serve_layout():
 def lockSelUni(n_clicks):
 # disable changing a selection once the submit button has been hit
 	return (n_clicks>0);
-		
+'''
+@app.callback(
+    Output(component_id = {'type':'selector-tree', 'role':'choice', 'index': MATCH}, component_property = "disabled")
+	,State(component_id = {'type':'selector-tree', 'role':'choice', 'index': MATCH}, component_property = "value")
+	,State(component_id = {'type':'selector-tree', 'role':'choice', 'index': MATCH}, component_property = "options")
+	,Input(component_id = {'type':'button', 'role': 'submit', 'index': MATCH}, component_property = 'n_clicks'))
+def lockSelMulti(predValue,predOptions,n_clicks):
+# disable changing a selection once the submit button has been hit (more complicated for multi-select)
+	newOptions = predOptions;
+	if (n_clicks>0):
+		return true;
+	return newOptions;
+'''
 @app.callback(
     Output(component_id = {'type':'selector-multi', 'role':'choice', 'index': MATCH}, component_property = "options")
 	,State(component_id = {'type':'selector-multi', 'role':'choice', 'index': MATCH}, component_property = "value")
@@ -232,8 +245,8 @@ def hidePrevSubmit(n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
-		if (df_SelProp[name['index'].title()]==1):
+		propReqConf = checkConfReq(namesProp[selProp],name['index'].title());
+		if (propReqConf):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
 
@@ -244,8 +257,8 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
-		if (df_SelProp[name['index'].title()]==1):
+		propReqConf = checkConfReq(namesProp[selProp],name['index'].title());
+		if (propReqConf):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
 
@@ -256,8 +269,8 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
-		if (df_SelProp[name['index'].title()]==1):
+		propReqConf = checkConfReq(namesProp[selProp],name['index'].title());
+		if (propReqConf):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
 
@@ -268,8 +281,8 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
-		if (df_SelProp[name['index'].title()]==1):
+		propReqConf = checkConfReq(namesProp[selProp],name['index'].title());
+		if (propReqConf):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
 
@@ -280,8 +293,8 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
-		if (df_SelProp[name['index'].title()]==1):
+		propReqConf = checkConfReq(namesProp[selProp],name['index'].title());
+		if (propReqConf):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
 
@@ -292,8 +305,8 @@ def displayConfDiv(name,selProp,n_clicks):
 def displayConfDiv(name,selProp,n_clicks):
 	newStyle = {'visibility':'hidden'};
 	if (n_clicks>0):
-		df_SelProp = df_Prop.loc[df_Prop.Column==namesProp[selProp]];
-		if (df_SelProp[name['index'].title()]==1):
+		propReqConf = checkConfReq(namesProp[selProp],name['index'].title());
+		if (propReqConf):
 			newStyle = {'visibility':'visible'};
 	return newStyle;
 # END MODEL CONF DISPLAY CONTROL CALLBACKS
@@ -319,7 +332,7 @@ def genHistoRespCB(selResp, n_clicks):
 
 @app.callback(
     Output(component_id = {'type':'graph', 'role': 'result', 'index': 'pred'}, component_property = 'figure')
-    ,State(component_id = {'type':'selector-multi', 'role':'choice', 'index': 'pred'}, component_property = 'value')
+    ,State(component_id = {'type':'selector-tree', 'role':'choice', 'index': 'pred'}, component_property = 'checked')
     ,Input(component_id = {'type':'button', 'role': 'submit', 'index': 'conf'}, component_property = 'n_clicks'))
 def genHistoPredCB(selPred, n_clicks):
 # validate input -> pass to logic -> format logic result for display
@@ -342,7 +355,7 @@ def genHistoPredCB(selPred, n_clicks):
 @app.callback(
 	Output(component_id = {'type':'table', 'role': 'result', 'index': 'meas'}, component_property = 'children')
     ,State(component_id = {'type':'selector-uni', 'role':'choice', 'index': 'resp'}, component_property = 'value')
-    ,State(component_id = {'type':'selector-multi', 'role':'choice', 'index': 'pred'}, component_property = 'value')
+    ,State(component_id = {'type':'selector-tree', 'role':'choice', 'index': 'pred'}, component_property = 'checked')
     ,State(component_id = {'type':'selector-multi', 'role':'choice', 'index': 'meas'}, component_property = 'value')
     ,Input(component_id = {'type':'button', 'role': 'submit', 'index': 'conf'}, component_property = 'n_clicks'))
 def genMeasCB(selResp,selPred,selMeas, n_clicks):
@@ -390,7 +403,7 @@ def genMeasCB(selResp,selPred,selMeas, n_clicks):
 
 @app.callback(Output(component_id = {'type':'table', 'role': 'result', 'index': 'prop'}, component_property = 'children')
     ,State(component_id = {'type':'selector-uni', 'role':'choice', 'index': 'resp'}, component_property = 'value')
-    ,State(component_id = {'type':'selector-multi', 'role':'choice', 'index': 'pred'}, component_property = 'value')
+    ,State(component_id = {'type':'selector-tree', 'role':'choice', 'index': 'pred'}, component_property = 'checked')
     ,State(component_id = {'type':'selector-uni', 'role':'choice', 'index': 'prop'}, component_property = 'value')
     ,State(component_id = {'type':'selector-uni', 'role':'conf', 'index': 'seed'}, component_property = 'value')
     ,State(component_id = {'type':'selector-uni', 'role':'conf', 'index': 'trainPct'}, component_property = 'value')
@@ -411,7 +424,7 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 			d_Conf['Layers'] = confLyrs; d_Conf['Nodes'] = confNodes; d_Conf['LearnRate'] = float(1*10**(-int(confLR))); 
 			retVal = genModel(selResp, selPred, selProp, d_Conf);
 			tableList = []; tableStyle = {'text-align':'center','border':'1px black solid'};
-			propName = namesProp[selProp]; respName = namesResp[selResp]; binclass = checkBinClass(propName);
+			propName = namesProp[selProp]; respName = namesResp[selResp]; binclass = checkConfReq(propName,'Binthresh');
 			headLine = propName+" model of "+respName+" based on selected predictors:";
 			rowHeader = html.Tr(html.Th(headLine,colSpan="100%",style=tableStyle));
 			tableList.append(rowHeader);
@@ -482,23 +495,644 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 
 def genCBT():
 	retVal = [
-	{	"value":"#Burst","label":"Burst Measures","children": [
-	    {"value":"#Elec1","label":"Burst Electrode 1","children":
-			[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec1'],df_Schema).items()]
+		{"value":"#Burst","label":"Burst Measures","children": [
+			{"value":"#Elec1B","label":"Burst Electrode 1","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec1'],df_Schema).items()]}
+		   ,{"value":"#Elec2B","label":"Burst Electrode 2","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec2'],df_Schema).items()]}
+		]}
+	   ,{"value":"#ECG","label":"ECG and Derived Values","children": [
+			{"value":"#Is_20Mins","label":"Measures at 20 Mins","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_20Mins'],df_Schema).items()]}
+		   ,{"value":"#Is_40Mins","label":"Measures at 40 Mins","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_40Mins'],df_Schema).items()]}
+		   ,{"value":"#Is_60Mins","label":"Measures at 60 Mins","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_60Mins'],df_Schema).items()]}
+		]}
+		,{"value":"#EEG","label":"EEG and Derived Values","children": [
+			{"value":"#Elec1","label":"Burst Electrode 1","children": [
+				{"value":"#Elec1Power","label":"Spectral Power","children": [
+						{"value":"#Elec1Power@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec1Power@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Power@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Power@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Power@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1Power@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec1Power@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Power@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Power@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Power@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1Power@60Mins","label":"Measures at 60 Mins","children":
+						[
+							{"value":"#Elec1Power@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Power@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Power@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Power@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Power@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','!Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec1Shannon","label":"Shannon Entropy","children": [
+						{"value":"#Elec1Shannon@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec1Shannon@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1Shannon@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec1Shannon@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1Shannon@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec1Shannon@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Shannon@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec1Tsallis","label":"Tsallis Entropy","children": [
+						{"value":"#Elec1Tsallis@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec1Tsallis@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1Tsallis@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec1Tsallis@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1Tsallis@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec1Tsallis@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1Tsallis@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec1PowerFrac","label":"Fraction of Total Spectral Power","children": [
+						{"value":"#Elec1PowerFrac@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec1PowerFrac@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1PowerFrac@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec1PowerFrac@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1PowerFrac@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec1PowerFrac@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1PowerFrac@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Power','Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec1ShannonFrac","label":"Fraction of Shannon Entropy","children": [
+						{"value":"#Elec1ShannonFrac@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec1ShannonFrac@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1ShannonFrac@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec1ShannonFrac@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1ShannonFrac@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec1ShannonFrac@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1ShannonFrac@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec1TsallisFrac","label":"Fraction of Tsallis Entropy","children": [
+						{"value":"#Elec1TsallisFrac@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec1TsallisFrac@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1TsallisFrac@40Mins","label":"Measures at 40 Mins","children":
+						[
+							{"value":"#Elec1TsallisFrac@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec1TsallisFrac@60Mins","label":"Measures at 60 Mins","children":
+						[
+							{"value":"#Elec1TsallisFrac@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec1TsallisFrac@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec1','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+			]
 		}
-	   ,{"value":"#Elec2","label":"Burst Electrode 2","children": 
-			[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec2'],df_Schema).items()]
-		}]
-	}
-   ,{"value":"#ECG","label":"ECG and Derived Values","children": [
-		{"value":"#Is_20Mins","label":"Measures at 20 Mins","children":
-			[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_20Mins'],df_Schema).items()]
-		}
-	   ,{"value":"#Is_40Mins","label":"Measures at 40 Mins","children":
-			[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_40Mins'],df_Schema).items()]
-		}
-	   ,{"value":"#Is_60Mins","label":"Measures at 60 Mins","children":
-			[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_60Mins'],df_Schema).items()]
+		,{"value":"#Elec2","label":"Burst Electrode 2","children": [
+				{"value":"#Elec2Power","label":"Spectral Power","children": [
+						{"value":"#Elec2Power@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec2Power@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Power@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Power@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Power@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2Power@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec2Power@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Power@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Power@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Power@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2Power@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec2Power@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Power@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Power@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Power@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Power@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','!Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec2Shannon","label":"Shannon Entropy","children": [
+						{"value":"#Elec2Shannon@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec2Shannon@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2Shannon@40Mins","label":"Measures at 40 Mins","children":
+						[
+							{"value":"#Elec2Shannon@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2Shannon@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec2Shannon@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Shannon@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','!Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec2Tsallis","label":"Tsallis Entropy","children": [
+						{"value":"#Elec2Tsallis@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec2Tsallis@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2Tsallis@40Mins","label":"Measures at 40 Mins","children": [
+							{"value":"#Elec2Tsallis@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2Tsallis@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec2Tsallis@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2Tsallis@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','!Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec2PowerFrac","label":"Fraction of Total Spectral Power","children": [
+						{"value":"#Elec2PowerFrac@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec2PowerFrac@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2PowerFrac@40Mins","label":"Measures at 40 Mins","children":
+						[
+							{"value":"#Elec2PowerFrac@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2PowerFrac@60Mins","label":"Measures at 60 Mins","children": [
+							{"value":"#Elec2PowerFrac@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2PowerFrac@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Power','Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec2ShannonFrac","label":"Fraction of Shannon Entropy","children": [
+						{"value":"#Elec2ShannonFrac@20Mins","label":"Measures at 20 Mins","children": [
+							{"value":"#Elec2ShannonFrac@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2ShannonFrac@40Mins","label":"Measures at 40 Mins","children":
+						[
+							{"value":"#Elec2ShannonFrac@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2ShannonFrac@60Mins","label":"Measures at 60 Mins","children":
+						[
+							{"value":"#Elec2ShannonFrac@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2ShannonFrac@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Shannon','Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+				,{"value":"#Elec2TsallisFrac","label":"Fraction of Tsallis Entropy","children":
+					[
+						{"value":"#Elec2TsallisFrac@20Mins","label":"Measures at 20 Mins","children":
+						[
+							{"value":"#Elec2TsallisFrac@20MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@20MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@20MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@20MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@20MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@20MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@20MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_20Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2TsallisFrac@40Mins","label":"Measures at 40 Mins","children":
+						[
+							{"value":"#Elec2TsallisFrac@40MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@40MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@40MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@40MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@40MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@40MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@40MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_40Mins','Is_Total'],df_Schema).items()]}
+						]}
+						,{"value":"#Elec2TsallisFrac@60Mins","label":"Measures at 60 Mins","children":
+						[
+							{"value":"#Elec2TsallisFrac@60MinsDelta","label":"Delta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Delta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@60MinsTheta","label":"Theta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Theta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@60MinsAlpha","label":"Alpha Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Alpha'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@60MinsBeta","label":"Beta Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Beta'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@60MinsGamma","label":"Gamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Gamma'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@60MinsSuperGamma","label":"SuperGamma Band","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_SuperGamma'],df_Schema).items()]}
+							,{"value":"#Elec2TsallisFrac@60MinsTotal","label":"Total","children":[
+								{"label":v,"value":v} for k,v in genFieldDict(['Is_EEG','Is_Elec2','Is_Entropy','Is_Tsallis','Is_Frac','Is_60Mins','Is_Total'],df_Schema).items()]}
+						]}
+					]
+				}
+			]
 		}
 	]}];
 	return retVal;
@@ -545,17 +1179,17 @@ def buildQuery(colList,valList = [1], ander=True):
     
 def genMeas(varResp, varPred, varMeas):
 # pull specified values from data sources -> pass to measure switch -> pass back to view
-    retResp = {}; retVal = {}; measList = []; 
-    for meas in varMeas:
-        measList.append(namesMeas[meas]);
-    respVals = df_DataProc[namesResp[varResp]];     
-    for meas in measList:
-        if (meas in uniList.values()):
-            retResp[meas] = calcSwitch(meas,respVals);
-    if (len(varPred)>0):
-        predDict = {};
-        for varP in varPred:
-			if (pred[0]!='#'):
+	retResp = {}; retVal = {}; measList = []; 
+	for meas in varMeas:
+		measList.append(namesMeas[meas]);
+	respVals = df_DataProc[namesResp[varResp]];     
+	for meas in measList:
+		if (meas in uniList.values()):
+			retResp[meas] = calcSwitch(meas,respVals);
+	if (len(varPred)>0):
+		predDict = {};
+		for varP in varPred:
+			if (varP[0]!='#'):
 				predName = namesPred[varP];
 				predVals = df_DataProc[predName];
 				retPredCurr = {}; 
@@ -566,8 +1200,8 @@ def genMeas(varResp, varPred, varMeas):
 						retPredCurr[meas] = calcSwitch(meas,predVals,respVals);            
 				predDict[predName] = retPredCurr;
 				retVal['pred'] = predDict;
-    retVal['resp'] = retResp;
-    return retVal;
+	retVal['resp'] = retResp;
+	return retVal;
 
 def calcSwitch(measName,varA,varB=[]):
 # identify measure -> pass values to measure-specific function -> format result as single string -> pass back to view
@@ -685,16 +1319,16 @@ def calcStd(varList):
 
 def genModel(varResp, varPred, varProp, d_Conf):
 # pull specified values from data sources -> pass to model switch -> pass back to view
-    retVal = {}; 
-    respName = namesResp[varResp]; valsResp = df_DataProc[respName];
-    valsPred = pd.DataFrame(); 
-    for varP in varPred:
+	retVal = {}; 
+	respName = namesResp[varResp]; valsResp = df_DataProc[respName];
+	valsPred = pd.DataFrame(); 
+	for varP in varPred:
 		if (varP[0]!='#'):
 			predName = namesPred[varP];
 			valsPred[predName] = df_DataProc[predName];
-    propName = namesProp[varProp];
-    retVal = modelSwitch(propName,valsResp,valsPred,d_Conf);
-    return retVal;
+	propName = namesProp[varProp];
+	retVal = modelSwitch(propName,valsResp,valsPred,d_Conf);
+	return retVal;
 
 def modelSwitch(propName,valsResp,valsPred,d_Conf):
 # identify proposition -> pass values and configuration to proposition-specific function -> calculate error rates -> pass back to view
@@ -706,7 +1340,7 @@ def modelSwitch(propName,valsResp,valsPred,d_Conf):
     np.random.seed(d_Conf['Seed']); sample = np.random.uniform(size = len(valsResp.index)) < d_Conf['TrainPct'];
     trainResp = valsResp[sample]; testResp = valsResp[~sample];
     trainPred = valsPred[sample]; testPred = valsPred[~sample];
-    binclass = checkBinClass(propName);
+    binclass = checkConf(propName,'Binthresh');
     if(binclass):
         thresh = np.percentile(valsResp,d_Conf['BinThresh']);
         trainResp = (trainResp > thresh).astype(int); 
@@ -818,8 +1452,8 @@ def makeROC(inDict,title):
                    ,yaxis_title='True Positive Rate')
     return fig;
 
-def checkBinClass(propName):
-    return (df_Prop[df_Prop.Column==propName].Binthresh==1).reset_index()['Binthresh'][0];
+def checkConfReq(propName,req):
+    return (df_Prop[df_Prop.Column==propName][req].iloc[0]==1);
 
 def setDiff(listA,listB):
     return list(set(listA) - set(listB));
