@@ -70,11 +70,10 @@ C05. Add variable arguments to genfielddict
 V00. Measures: 
             Bivariate: Chi-Square Test, Covariance
             Univariate simple: Mode, Mean, IQR, Range, Min, Max, Skew, Kurtosis
-            Univariate: Median Absolute Deviation (median of abs dev from median), Relative Standard Deviation ( std/mean )
-                        Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables)
-V00. Propositions: Decision Tree
-                    Linear Discrimint Analysis
-                    Support Vector Machine
+            Univariate: Median Absolute Deviation (median of abs dev from median), 
+						Relative Standard Deviation ( std/mean )
+			Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables)
+V00. Propositions: Linear Discriminant Analysis; Naive-Bayes (Gaussian); Support Vector Machine
 T00. Update Measures and Predictors to be collapsible trees instead of Checklists
 T00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
             , Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
@@ -84,6 +83,9 @@ G00. Add Autumn burst data from MATLAB
 00. Applying Measures and Propositions only with appropriate variable Level of Measurement 
 00. Predictor variables listed only when causally or logically valid for chosen Response variable
 00. Expand list of available Response variables
+
+#. Delayed To v3
+00. Propositions: Decision Tree, Naive-Bayes (Categorical)
 
 #. Items Planned for future versions:
 v3. time series analysis, functions of data as predictor and response variables (e.g. entropy), more model configuration settings

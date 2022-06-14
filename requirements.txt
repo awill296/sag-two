@@ -1,6 +1,7 @@
 dash
 dash_useful_components 
 flask 
+graphviz
 IPython
 Markup 
 matplotlib

@@ -2,19 +2,19 @@ from collections import OrderedDict; from dash import ALL, dcc, html, Input, MAT
 from flask import Markup; from IPython.display import display, Markdown;
 from matplotlib.ticker import MaxNLocator; from plotly.subplots import make_subplots;
 from plotly.tools import mpl_to_plotly; from sklearn import svm,tree;
-from sklearn.metrics import accuracy_score, roc_curve, auc;
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc;
 from scipy.stats import iqr,kurtosis,median_abs_deviation,mode,pearsonr,spearmanr,skew; 
 from tensorflow.keras import layers, models, losses; 
 from torch.utils.data import TensorDataset, DataLoader;
-import dash; import dash_useful_components as duc; import math; import matplotlib.pyplot as plt; 
+import dash; import dash_useful_components as duc; import graphviz; import math; import matplotlib.pyplot as plt; 
 import networkx as nx; import numpy as np; import numpy.random as rnd; import pandas as pd;
-import os; import PIL; import plotly.express as px; import plotly.graph_objects as go; 
-import requests as rq; import seaborn as sns; import sklearn as skl; import sklearn.linear_model as lm; 
-import sklearn.discriminant_analysis as lda; import statistics as stttx;
-import statsmodels as sm; import statsmodels.api as sma; import statsmodels.formula.api as smf; 
-import requests as rq; import tensorflow as tf; import torch; import torch.nn as nn; 
-import torch.nn.functional as F; import torch.optim as optim; import torchvision; 
-import torchvision.transforms as transforms; import urllib.request; import warnings;
+import os; import plotly.express as px; import plotly.graph_objects as go; import requests as rq;
+import seaborn as sns; import sklearn as skl; import sklearn.linear_model as lm; 
+import sklearn.naive_bayes as nb; import sklearn.discriminant_analysis as lda; 
+import statistics as stttx; import statsmodels as sm; import statsmodels.api as sma; 
+import statsmodels.formula.api as smf; import requests as rq; import tensorflow as tf; 
+import torch; import torch.nn as nn; import torch.nn.functional as F; import torch.optim as optim; 
+import torchvision; import torchvision.transforms as transforms; import urllib.request; import warnings;
 
 # file settings
 warnings.simplefilter(action='ignore', category=Warning); sns.set(); np.set_printoptions(threshold=np.inf); 
@@ -411,11 +411,19 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 			d_Conf['Layers'] = confLyrs; d_Conf['Nodes'] = confNodes; d_Conf['LearnRate'] = float(1*10**(-int(confLR))); 
 			retVal = genModel(selResp, selPred, selProp, d_Conf);
 			tableList = []; tableStyle = {'text-align':'center','border':'1px black solid'};
-			propName = namesProp[selProp]; respName = namesResp[selResp]; 
+			propName = namesProp[selProp]; respName = namesResp[selResp]; binclass = checkBinClass(propName);
 			headLine = propName+" model of "+respName+" based on selected predictors:";
 			rowHeader = html.Tr(html.Th(headLine,colSpan="100%",style=tableStyle));
 			tableList.append(rowHeader);
-			if (propName=='Linear-Regression'):
+			if (propName=='Linear-Discriminant-Analysis'):
+				tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
+										  ,html.Td("β0",style=tableStyle)
+										  ,html.Td(retVal['model'].intercept_[0],style=tableStyle)]));
+				for coef,pred,idx in zip(retVal['model'].coef_[0],selPred,range(len(retVal['model'].coef_[0]))):
+					tableList.append(html.Tr([html.Td(namesPred[pred],style=tableStyle)
+											  ,html.Td("β"+str(idx+1),style=tableStyle)
+											  ,html.Td(coef,style=tableStyle)]));			
+			elif (propName=='Linear-Regression'):
 				tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
 										  ,html.Td("β0",style=tableStyle)
 										  ,html.Td(retVal['model'].intercept_,style=tableStyle)]));
@@ -423,7 +431,6 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 					tableList.append(html.Tr([html.Td(namesPred[pred],style=tableStyle)
 											  ,html.Td("β"+str(idx+1),style=tableStyle)
 											  ,html.Td(coef,style=tableStyle)]));
-				errorType = "RMS";
 			elif (propName=='Logistic-Regression'):
 				tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
 										  ,html.Td("β0",style=tableStyle)
@@ -432,14 +439,33 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 					tableList.append(html.Tr([html.Td(namesPred[pred],style=tableStyle)
 											  ,html.Td("β"+str(idx+1),style=tableStyle)
 											  ,html.Td(coef,style=tableStyle)]));
-				errorType = "%";
+			#elif (propName=='Naive-Bayes-Categorical'):
+			#elif (propName=='Decision-Tree'):
+			elif (propName=='Naive-Bayes-Gaussian'):
+				tableList.append(html.Tr([html.Td("additive variance value",style=tableStyle)
+										  ,html.Td("ε",style=tableStyle)
+										  ,html.Td(retVal['model'].epsilon_[0],style=tableStyle)]));
+				for pred,idx in zip(selPred,range(len(selPred))):
+					tableList.append(html.Tr([html.Td(namesPred[pred],style=tableStyle,colSpan="100%")]));
+					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ1±σ1",style=tableStyle)
+											  ,html.Td(retVal['model'].theta_[idx][0]+"±"+retVal['model'].var_[idx][0],style=tableStyle)]));
+					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ2±σ2",style=tableStyle)
+											  ,html.Td(retVal['model'].theta_[idx][1]+"±"+retVal['model'].var_[idx][1],style=tableStyle)]));
 			elif (propName=='Neural-Network'):
 				for layer,idx in zip(retVal['model'],range(len(retVal['model']))):
 					if(not isinstance(layer,type(nn.ReLU()))):
 						tableList.append(html.Tr([html.Td("Layer " + str(idx+1) + " weights:",style=tableStyle)
 												  ,html.Td(layer.weight.detach().numpy().T,style=tableStyle)]));
-				errorType = "RMS";
+			elif (propName=='Support-Vector-Machine'):
+				tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
+										  ,html.Td("β0",style=tableStyle)
+										  ,html.Td(retVal['model'].intercept_[0],style=tableStyle)]));
+				for coef,pred,idx in zip(retVal['model'].coef_[0],selPred,range(len(retVal['model'].coef_[0]))):
+					tableList.append(html.Tr([html.Td(namesPred[pred],style=tableStyle)
+											  ,html.Td("β"+str(idx+1),style=tableStyle)
+											  ,html.Td(coef,style=tableStyle)]));			
 			if ("error" in retVal.keys()):
+				errorType = "%" if binclass else "RMS";
 				tableList.append(html.Tr([html.Td("Error Rate on Training Data ("+errorType+"):",colSpan=2,style=tableStyle)
 										  ,html.Td(retVal['error']['train'],style=tableStyle)]));
 				tableList.append(html.Tr([html.Td("Error Rate on Test Data ("+errorType+"):",colSpan=2,style=tableStyle)
@@ -459,88 +485,182 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 # BEGIN LOGIC FUNCTIONS
 def loadData():
 #. load data files into memory
-	global df_Cohorts; df_Cohorts = pd.read_csv(folder+'/'+files[0]); 
-	global df_DataProc; df_DataProc = pd.read_csv(folder+'/'+files[1]);
-	global df_Meas; df_Meas = pd.read_csv(folder+'/'+files[2]); 
-	global df_Prop; df_Prop = pd.read_csv(folder+'/'+files[3]);
-	global df_Schema; df_Schema = pd.read_csv(folder+'/'+files[4]);
-	global namesResp; namesResp = genFieldDict('Response',df_Schema); 
-	global namesPred; namesPred = genFieldDict('Predictor',df_Schema);
-	global namesMeas; namesMeas = genFieldDict('Ready',df_Meas); 
-	global namesProp; namesProp = genFieldDict('Ready',df_Prop);
-	global uniList; uniList = genFieldDict('Variate',df_Meas);
-	
-def genFieldDict(req,df):
-#. generate field dictionary from dataframe based on specified parameter flag
-    fieldlist = df.loc[(df[req]==1)].Column.to_numpy();
+    global df_Cohorts; df_Cohorts = pd.read_csv(folder+'/'+files[0]); 
+    global df_DataProc; df_DataProc = pd.read_csv(folder+'/'+files[1]);
+    global df_Meas; df_Meas = pd.read_csv(folder+'/'+files[2]); 
+    global df_Prop; df_Prop = pd.read_csv(folder+'/'+files[3]);
+    global df_Schema; df_Schema = pd.read_csv(folder+'/'+files[4]);
+    global namesResp; namesResp = genFieldDict(['Response'],df_Schema); 
+    global namesPred; namesPred = genFieldDict(['Predictor'],df_Schema);
+    global namesMeas; namesMeas = genFieldDict(['Ready'],df_Meas); 
+    global namesProp; namesProp = genFieldDict(['Ready'],df_Prop);
+    global uniList; uniList = genFieldDict(['Variate'],df_Meas);
+
+def genFieldDict(reqList,df):
+#. generate field dictionary from dataframe based on specified parameter flag(s)
+    reqQuery = buildQuery(reqList);
+    fieldlist = df.query(reqQuery).Column.to_numpy();
     fieldDict = dict(enumerate(fieldlist.flatten(), 1));
     #fieldDictInv = dict((v, k) for k, v in fieldDictInv.items());
     return fieldDict;
+    
+def buildQuery(colList,valList = [1], ander=True):
+    conj = " and " if ander else " or ";
+    offset = len(conj); query = ""; eqstr = " == ";
+    if (len(colList)>1):
+        if (len(valList)>1):
+            queryDict = dict(zip(colList,valList));
+        else:
+            queryDict = dict(zip(colList,valList*len(colList)));
+        for k,v in queryDict.items():
+            query = query + conj + k + eqstr + str(v);
+        query = query[offset:(len(query)-offset)];
+    else:
+        query = str(colList[0]) + eqstr + str(valList[0]);
+    return query;
 
-def genCBT(df_In):
-	
-	return cbt;
-	
+def genCBT(df_Schema):
+	return x;
+
 def genMeas(varResp, varPred, varMeas):
 # pull specified values from data sources -> pass to measure switch -> pass back to view
-	retResp = {}; retVal = {}; measList = []; 
-	for meas in varMeas:
-		measList.append(namesMeas[meas]);
-	respVals = df_DataProc[namesResp[varResp]];     
-	for meas in measList:
-		if (meas in uniList.values()):
-			retResp[meas] = calcSwitch(meas,respVals);
-	if (len(varPred)>0):
-		predDict = {};
-		for varP in varPred:
-			predName = namesPred[varP];
-			predVals = df_DataProc[predName];
-			retPredCurr = {}; 
-			for meas in measList:
-				if (meas in uniList.values()):
-					retPredCurr[meas] = calcSwitch(meas,predVals);
-				else:
-					retPredCurr[meas] = calcSwitch(meas,predVals,respVals);            
-			predDict[predName] = retPredCurr;
-			retVal['pred'] = predDict;
-	retVal['resp'] = retResp;
-	return retVal;
+    retResp = {}; retVal = {}; measList = []; 
+    for meas in varMeas:
+        measList.append(namesMeas[meas]);
+    respVals = df_DataProc[namesResp[varResp]];     
+    for meas in measList:
+        if (meas in uniList.values()):
+            retResp[meas] = calcSwitch(meas,respVals);
+    if (len(varPred)>0):
+        predDict = {};
+        for varP in varPred:
+            predName = namesPred[varP];
+            predVals = df_DataProc[predName];
+            retPredCurr = {}; 
+            for meas in measList:
+                if (meas in uniList.values()):
+                    retPredCurr[meas] = calcSwitch(meas,predVals);
+                else:
+                    retPredCurr[meas] = calcSwitch(meas,predVals,respVals);            
+            predDict[predName] = retPredCurr;
+            retVal['pred'] = predDict;
+    retVal['resp'] = retResp;
+    return retVal;
 
 def calcSwitch(measName,varA,varB=[]):
 # identify measure -> pass values to measure-specific function -> format result as single string -> pass back to view
-	retVal = '';
-	if (measName=='Mean'):
-		retVal = calcMean(varA);
-	elif (measName=='Std'):
-		retVal = calcStd(varA);
-	elif (measName=='Correlation-Pearson'):
-		val,pval = calcCorrP(varA,varB);        
-		retVal = str(val)+"("+str(pval)+")";
-	elif (measName=='Correlation-Spearman'):
-		val,pval = calcCorrS(varA,varB);
-		retVal = str(val)+"("+str(pval)+")";
-	return retVal;
+    retVal = '';
+# Bivariate Measures
+    if (measName=='Chi-Squared-Independence'):
+        val,pval = calcChiSq(varA,varB);        
+        retVal = str(val)+"("+str(pval)+")";
+    elif (measName=='Correlation-Pearson'):
+        val,pval = calcCorrP(varA,varB);        
+        retVal = str(val)+"("+str(pval)+")";
+    elif (measName=='Correlation-Spearman'):
+        val,pval = calcCorrS(varA,varB);
+        retVal = str(val)+"("+str(pval)+")";
+    elif (measName=='Covariance'):
+        retVal = calcCovar(varA,varB);
+# Univariate Measures
+    elif (measName=='Interquartile-Range'):
+        retVal = calcIQR(varA);
+    elif (measName=='Kurtosis'):
+        retVal = calcKurtosis(varA);
+    elif (measName=='Maximum'):
+        retVal = calcMax(varA);
+    elif (measName=='Mean'):
+        retVal = calcMean(varA);
+    elif (measName=='Median'):
+        retVal = calcMedian(varA);
+    elif (measName=='Median-Absolute-Deviation'):
+        retVal = calcMAD(varA);
+    elif (measName=='Minimum'):
+        retVal = calcMin(varA);
+    elif (measName=='Mode'):
+        retVal = calcMode(varA);
+    elif (measName=='Normality'):
+        val,pval = calcNormality(varA,varB);
+        retVal = str(val)+"("+str(pval)+")";
+    elif (measName=='Range'):
+        retVal = calcRange(varA);
+    elif (measName=='Relative-Standard-Deviation'):
+        retVal = calcRSD(varA);
+    elif (measName=='Skew'):
+        retVal = calcSkew(varA);
+    elif (measName=='Standard-Deviation'):
+        retVal = calcStd(varA);
+    return retVal;
 
 # BEGIN MEASURE-SPECIFIC FUNCTIONS
+# BEGIN BIVARIATE MEASURES
+def calcChiSq(varA,varB):
+    retV, retP, _, _ = chi2_contingency(np.array([varA,varB]), correction=False);
+    retV = round(retV,MRL);
+    retP = round(retP,MRL);
+    return [retV,retP];
+
+def calcCorrP(varA,varB):
+    retV, retP = pearsonr(varA,varB); 
+    retV = round(retV,MRL);
+    retP = round(retP,MRL);
+    return [retV,retP];
+
+def calcCorrS(varA,varB):
+    retV, retP = spearmanr(varA,varB); 
+    retV = round(retV,MRL);
+    retP = round(retP,MRL);
+    return [retV,retP];
+
+def calcCovar(varA,varB):
+    return round(np.cov(a,b)[0][1],MRL);
+
+# END BIVARIATE MEASURES
+# BEGIN UNIVARIATE MEASURES
+def calcIQR(varList):
+    return round(iqr(varList),MRL);
+
+def calcKurtosis(varList):
+    return round(kurtosis(varList),MRL);
+
+def calcMax(varList):
+    return round(max(varList),MRL);
+
+def calcMedian(varList):
+    return round(stttx.median(varList),MRL);
+
+def calcMAD(varList):
+    return round(median_abs_deviation(varList),MRL);
+
 def calcMean(varList):
     return round(np.mean(varList),MRL);
 
+def calcMin(varList):
+    return round(min(varList),MRL);
+
+def calcMode(varList): 
+    return round(mode(varList),MRL);
+
+def calcNormality(varList): #TODO
+    retV, retP = spearmanr(varList); 
+    retV = round(retV,MRL);
+    retP = round(retP,MRL);
+    return [retV,retP];
+
+def calcRange(varList):
+    return round(calcMax(varList)-calcMin(varList),MRL);
+
+def calcRSD(varList):
+    return round(calcStd(varList)/calcMean(varList),MRL);
+
+def calcSkew(varList):
+    return round(skew(varList),MRL);
+
 def calcStd(varList):
     return round(np.std(varList),MRL);
-
-def calcCorrP(varA,varB):
-	retV, retP = pearsonr(varA,varB); 
-	retV = round(retV,MRL);
-	retP = round(retP,MRL);
-	return [retV,retP];
-
-def calcCorrS(varA,varB):
-	retV, retP = spearmanr(varA,varB); 
-	retV = round(retV,MRL);
-	retP = round(retP,MRL);
-	return [retV,retP];
+# END UNIVARIATE MEASURES
 # END MEASURE-SPECIFIC FUNCTIONS
-								 
+
 def genModel(varResp, varPred, varProp, d_Conf):
 # pull specified values from data sources -> pass to model switch -> pass back to view
     retVal = {}; 
@@ -555,46 +675,84 @@ def genModel(varResp, varPred, varProp, d_Conf):
 
 def modelSwitch(propName,valsResp,valsPred,d_Conf):
 # identify proposition -> pass values and configuration to proposition-specific function -> calculate error rates -> pass back to view
-	retVal = {};
-	np.random.seed(d_Conf['Seed']); sample = np.random.uniform(size = len(valsResp.index)) < d_Conf['TrainPct'];
-	trainResp = valsResp[sample]; testResp = valsResp[~sample];
-	trainPred = valsPred[sample]; testPred = valsPred[~sample];
-	if (propName=='Linear-Regression'):
-		retVal['model'] = modelLinReg(trainResp,trainPred,d_Conf);
-		modTrain = retVal['model'].predict(trainPred);
-		modTest = retVal['model'].predict(testPred);
-		retVal['error'] = {};
-		retVal['error']['train'] = assessErr(trainResp.to_numpy(),modTrain);
-		retVal['error']['test'] = assessErr(testResp.to_numpy(),modTest);
-	elif (propName=='Logistic-Regression'):
-		thresh = np.percentile(valsResp,d_Conf['BinThresh']);
-		trainResp = (trainResp > thresh).astype(int); 
-		testResp = (testResp > thresh).astype(int); 
-		retVal['model'] = modelLogReg(trainResp,trainPred,d_Conf);
-		modTrain = retVal['model'].predict(trainPred);
-		modTest = retVal['model'].predict(testPred);
-		retVal['error'] = {}; retVal['roc'] = {};
-		retVal['roc']['train'] = assessAUC(trainResp.to_numpy(),modTrain);
-		retVal['roc']['test'] = assessAUC(testResp.to_numpy(),modTest);
-		retVal['error']['train'] = assessErr(trainResp.to_numpy(),modTrain,True);
-		retVal['error']['test'] = assessErr(testResp.to_numpy(),modTest,True);
-	elif (propName=='Neural-Network'):
-		model = modelNN(trainResp,trainPred,d_Conf);
-		retVal['model'] = model;
-		modTrain = model(convNNType(trainPred)).detach().numpy().T[0];
-		modTest =  model(convNNType(testPred)).detach().numpy().T[0];
-		retVal['error'] = {};
-		retVal['error']['train'] = assessErr(trainResp.to_numpy(),modTrain);
-		retVal['error']['test'] = assessErr(testResp.to_numpy(),modTest);
-	return retVal;
+# TODO Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
+# Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
+# Univariate: Box-and-whisker plot
+# Bivariate: Scatter Plots
+    retVal = {};
+    np.random.seed(d_Conf['Seed']); sample = np.random.uniform(size = len(valsResp.index)) < d_Conf['TrainPct'];
+    trainResp = valsResp[sample]; testResp = valsResp[~sample];
+    trainPred = valsPred[sample]; testPred = valsPred[~sample];
+    binclass = checkBinClass(propName);
+    if(binclass):
+        thresh = np.percentile(valsResp,d_Conf['BinThresh']);
+        trainResp = (trainResp > thresh).astype(int); 
+        testResp = (testResp > thresh).astype(int); 
+    if (propName=='Neural-Network'):
+        model = modelNN(trainResp,trainPred,d_Conf);
+        retVal['model'] = model;
+        modTrain = model(convNNType(trainPred)).detach().numpy().T[0];
+        modTest =  model(convNNType(testPred)).detach().numpy().T[0];
+    else:
+        if (propName=='Decision-Tree'):
+            retVal['model'] = modelDecTree(trainResp,trainPred,d_Conf);
+        elif (propName=='Linear-Discriminant-Analysis'):
+            retVal['model'] = modelLDA(trainResp,trainPred,d_Conf);
+        elif (propName=='Linear-Regression'):
+            retVal['model'] = modelLinReg(trainResp,trainPred,d_Conf);
+        elif (propName=='Logistic-Regression'):
+            retVal['model'] = modelLogReg(trainResp,trainPred,d_Conf);
+        elif (propName=='Naive-Bayes-Categorical'):
+            retVal['model'] = modelNBCat(trainResp,trainPred,d_Conf);
+        elif (propName=='Naive-Bayes-Gaussian'):
+            retVal['model'] = modelNBGauss(trainResp,trainPred,d_Conf);
+        elif (propName=='Support-Vector-Machine'):
+            retVal['model'] = modelSVM(trainResp,trainPred,d_Conf);
+        modTrain = retVal['model'].predict(trainPred);
+        modTest = retVal['model'].predict(testPred);
+    retVal['error'] = {};
+    retVal['error']['train'] = assessErr(trainResp.to_numpy(),modTrain,binclass);
+    retVal['error']['test'] = assessErr(testResp.to_numpy(),modTest,binclass);
+    if (binclass):
+        retVal['roc'] = {};
+        retVal['roc']['train'] = assessAUC(trainResp.to_numpy(),modTrain);
+        retVal['roc']['test'] = assessAUC(testResp.to_numpy(),modTest);
+    return retVal;
 
 # BEGIN PROPOSITION-SPECIFIC FUNCTIONS
+def modelDecTree(resp,pred,d_Conf):
+    model = tree.DecisionTreeClassifier(); 
+    model.fit(pred,resp)
+    return model;
+
+def modelLDA(resp,pred,d_Conf):
+    model = lda.LinearDiscriminantAnalysis(tol=d_Conf['LearnRate']); 
+    model.fit(pred,resp);
+    return model;
+
 def modelLinReg(resp,pred,d_Conf):
-    model = lm.LinearRegression(fit_intercept=d_Conf['Intercept']).fit(pred,resp);
+    model = lm.LinearRegression(fit_intercept=d_Conf['Intercept']);
+    model.fit(pred,resp);
     return model;
 
 def modelLogReg(resp,pred,d_Conf):
-    model = lm.LogisticRegression(fit_intercept=d_Conf['Intercept'],max_iter=d_Conf['Magnitude']).fit(pred,resp);
+    model = lm.LogisticRegression(fit_intercept=d_Conf['Intercept'],max_iter=d_Conf['Magnitude']);
+    model.fit(pred,resp);
+    return model;
+
+def modelNBCat(resp,pred,d_Conf):
+    model = nb.CategoricalNB();
+    model.fit(pred,resp);
+    return model;
+
+def modelNBGauss(resp,pred,d_Conf):
+    model = nb.GaussianNB(); 
+    model.fit(pred,resp);
+    return model;
+
+def modelSVM(resp,pred,d_Conf):
+    model = svm.SVC(kernel='linear',max_iter=d_Conf['Magnitude'],tol=d_Conf['LearnRate']);
+    model.fit(pred,resp);
     return model;
 
 def convNNType(df):
@@ -629,13 +787,16 @@ def assessAUC(truth,prediction):
     return [fpr,tpr,calcAUC];
 
 def makeROC(inDict,title):
-	fig = go.Figure();
-	fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], line={'color':'navy','width':2}));
-	fig.add_trace(go.Scatter(x=inDict[0], y=inDict[1], line={'color':'darkorange','width':2,'dash':'dash'}));
-	fig.update_layout(title=('ROC curve (area = '+str(round(inDict[2],MRL))+') for '+title)
+    fig = go.Figure();
+    fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], line={'color':'navy','width':2}));
+    fig.add_trace(go.Scatter(x=inDict[0], y=inDict[1], line={'color':'darkorange','width':2,'dash':'dash'}));
+    fig.update_layout(title=('ROC curve (area = '+str(round(inDict[2],MRL))+') for '+title)
                    ,xaxis_title='False Positive Rate'
                    ,yaxis_title='True Positive Rate')
-	return fig;
+    return fig;
+
+def checkBinClass(propName):
+    return (df_Prop[df_Prop.Column==propName].Binthresh==1).reset_index()['Binthresh'][0];
 
 def setDiff(listA,listB):
     return list(set(listA) - set(listB));
