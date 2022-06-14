@@ -439,8 +439,6 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 					tableList.append(html.Tr([html.Td(namesPred[pred],style=tableStyle)
 											  ,html.Td("β"+str(idx+1),style=tableStyle)
 											  ,html.Td(coef,style=tableStyle)]));
-			#elif (propName=='Naive-Bayes-Categorical'):
-			#elif (propName=='Decision-Tree'):
 			elif (propName=='Naive-Bayes-Gaussian'):
 				tableList.append(html.Tr([html.Td("additive variance value",style=tableStyle)
 										  ,html.Td("ε",style=tableStyle)
@@ -513,15 +511,15 @@ def buildQuery(colList,valList = [1], ander=True):
         else:
             queryDict = dict(zip(colList,valList*len(colList)));
         for k,v in queryDict.items():
-            query = query + conj + k + eqstr + str(v);
-        query = query[offset:(len(query)-offset)];
+            if (k[0]=='!'):
+                query = query + conj + k[1:] + eqstr + str(int(not v));
+            else:
+                query = query + conj + k + eqstr + str(v);
+        query = query[offset:(len(query))];
     else:
         query = str(colList[0]) + eqstr + str(valList[0]);
     return query;
-
-def genCBT(df_Schema):
-	return x;
-
+    
 def genMeas(varResp, varPred, varMeas):
 # pull specified values from data sources -> pass to measure switch -> pass back to view
     retResp = {}; retVal = {}; measList = []; 
