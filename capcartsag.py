@@ -61,7 +61,7 @@ def serve_layout():
 		html.Div(style={'visibility':'hidden'}, children=[
 				html.H3(subtitles['Step04']),
 				html.Div(duc.CheckBoxTree(id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}
-											,nodes=genCBT(df_Schema), showNodeIcon=False)),
+											,nodes=genCBT(), showNodeIcon=False)),
 				#dcc.Checklist(options= [{'label': v, 'value': k} for k, v in namesPred.items()]
 							  #,id={'type':'selector-multi', 'role':'choice', 'index': 'pred'}),
 				html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'pred'}, n_clicks=0)
@@ -480,6 +480,29 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 # END LOGIC CALLBACKS
 # END CALLBACK FUNCTIONS
 
+def genCBT():
+	retVal = [
+	{	"value":"#Burst","label":"Burst Measures","children": [
+	    {"value":"#Elec1","label":"Burst Electrode 1","children":
+			[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec1'],df_Schema).items()]
+		}
+	   ,{"value":"#Elec2","label":"Burst Electrode 2","children": 
+			[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec2'],df_Schema).items()]
+		}]
+	}
+   ,{"value":"#ECG","label":"ECG and Derived Values","children": [
+		{"value":"#Is_20Mins","label":"Measures at 20 Mins","children":
+			[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_20Mins'],df_Schema).items()]
+		}
+	   ,{"value":"#Is_40Mins","label":"Measures at 40 Mins","children":
+			[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_40Mins'],df_Schema).items()]
+		}
+	   ,{"value":"#Is_60Mins","label":"Measures at 60 Mins","children":
+			[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_60Mins'],df_Schema).items()]
+		}
+	]}];
+	return retVal;
+
 # BEGIN LOGIC FUNCTIONS
 def loadData():
 #. load data files into memory
@@ -806,4 +829,4 @@ def setInt(listA,listB):
 app.layout = serve_layout();
 
 if __name__ == '__main__':
-    app.run_server(host='jupyter.biostat.jhsph.edu', port = os.getuid() + 30, debug=True)
+    app.run_server(host='localhost', port = 8889, debug=True)
