@@ -366,30 +366,33 @@ def genMeasCB(selResp,selPred,selMeas, n_clicks):
 		retVal = '';
 		if (selMeas is not None):
 			selMeas.sort(); tableStyle = {'text-align':'center','border':'1px black solid'};
-			selMeasUni = setInt(selMeas,list(uniList.keys()));
+			selMeasUni = setInt(selMeas,list(uniList.values()));
 			if (selPred is not None):
-				selPred.sort();
+				selPred.sort(); #TODO: Rearrange the results table to have pred variables be rows and meas be columns 
 				measVal = genMeas(selResp, selPred, selMeas);
-				header = [html.Th('Response Variable Measures',colSpan=max(len(selMeasUni),1),style=tableStyle)
-							 ,html.Th('Predictor Variable Measures',colSpan=(len(selPred)*len(selMeas)),style=tableStyle)];
-				subheader = [html.Td(namesResp[selResp],colSpan=len(selMeasUni),style=tableStyle)];
+				headerR = [html.Th('Response Variable Measures',colSpan=max(len(selMeasUni),1),style=tableStyle)];
+				subheaderR = [html.Td(namesResp[selResp],colSpan=len(selMeasUni),style=tableStyle)]; 
+				header = [html.Th('Predictor Variable Measures',colSpan=(len(selPred)*len(selMeas)),style=tableStyle)];
+				subheader = [];
 				for key in measVal['pred'].keys():
 					subheader.append(html.Td(key,colSpan=len(selMeas),style=tableStyle));
-				resultcols = [];
+				predcols = []; respcols = [];
 				if (len(selMeasUni)<1):
-					resultcols.append(html.Td('',style=tableStyle));
+					respcols.append(html.Td('',style=tableStyle));
 				else:
 					for respK in measVal['resp'].keys():
-						resultcols.append(html.Td(respK,style=tableStyle));
+						respcols.append(html.Td(respK,style=tableStyle));
 				for predV in measVal['pred'].values():
 					for key in predV:
-						resultcols.append(html.Td(key,style=tableStyle));
-				results = [];
+						predcols.append(html.Td(key,style=tableStyle));
+				resultsR = []; resultsP = [];
 				for respV in measVal['resp'].values():
-					results.append(html.Td(respV,style=tableStyle));
+					resultsR.append(html.Td(respV,style=tableStyle));
 				for predV in measVal['pred'].values():
 					for key in predV:
-						results.append(html.Td(predV[key],style=tableStyle));
+						resultsP.append(html.Td(predV[key],style=tableStyle));
+				retVal = html.Tbody([html.Tr(headerR),html.Tr(subheaderR),html.Tr(respcols),html.Tr(resultsR)
+									,html.Tr(header),html.Tr(subheader),html.Tr(predcols),html.Tr(resultsP)]);
 			else:
 				measVal = genMeas(selResp, [], selMeas);
 				header = [html.Th('Response Variable Measures',colSpan=len(selMeasUni),style=tableStyle)];
@@ -400,7 +403,7 @@ def genMeasCB(selResp,selPred,selMeas, n_clicks):
 				results = [];
 				for respV in measVal['resp'].values():
 					results.append(html.Td(respV,style=tableStyle));
-		retVal = html.Tbody([html.Tr(header),html.Tr(subheader),html.Tr(resultcols),html.Tr(results)]);
+				retVal = html.Tbody([html.Tr(header),html.Tr(subheader),html.Tr(resultcols),html.Tr(results)]);
 		return retVal;
 
 @app.callback(Output(component_id = {'type':'table', 'role': 'result', 'index': 'prop'}, component_property = 'children')
