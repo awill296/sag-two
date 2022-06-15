@@ -1,12 +1,6 @@
 ﻿Column,Response,Predictor,Datatype,LevelOfMeasurement,Is_NDS,Is_ECG,Is_EEG,Is_Burst,Is_20Mins,Is_40Mins,Is_60Mins,Is_Elec1,Is_Elec2,Is_Power,Is_Entropy,Is_Shannon,Is_Tsallis,Is_Frac,Is_Delta,Is_Theta,Is_Alpha,Is_Beta,Is_Gamma,Is_SuperGamma,Is_Total
 Sample,0,0,int,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-HeartRate@20Mins,0,1,float,4,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-HeartRate@40Mins,0,1,float,4,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-HeartRate@60Mins,0,1,float,4,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-MAP@20Mins,0,1,float,4,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-MAP@40Mins,0,1,float,4,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-MAP@60Mins,0,1,float,4,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_Behavior,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_Brainstem_Function,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_General_Behavioral,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -14,6 +8,12 @@ NDS_Subscore:_Motor_Assessment,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_Motor_Behavior,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_Seizures,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_Sensory_Assessment,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+HeartRate@20Mins,0,1,float,4,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+HeartRate@40Mins,0,1,float,4,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+HeartRate@60Mins,0,1,float,4,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+MAP@20Mins,0,1,float,4,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+MAP@40Mins,0,1,float,4,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+MAP@60Mins,0,1,float,4,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Count,0,1,int,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Duration_Max,0,1,int,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Duration_MaxPercent,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
