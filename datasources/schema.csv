@@ -16,10 +16,14 @@ NDS_Subscore:_Seizures,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 NDS_Subscore:_Sensory_Assessment,1,0,int,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Count,0,1,int,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Duration_Max,0,1,int,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
+Burst_A_Duration_MaxPercent,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Duration_Mean,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
+Burst_A_Duration_Percent,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_B_Count,0,1,int,4,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_B_Duration_Max,0,1,int,4,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0
+Burst_B_Duration_MaxPercent,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_B_Duration_Mean,0,1,float,4,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0
+Burst_B_Duration_Percent,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Period_Duration,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Period_End,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
 Burst_A_Period_Start,0,1,float,4,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0
