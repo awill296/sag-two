@@ -4,7 +4,7 @@ from matplotlib.ticker import MaxNLocator; from plotly.subplots import make_subp
 from plotly.tools import mpl_to_plotly; from sklearn import svm,tree; from sklearn.feature_selection import RFECV;
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc; 
 from scipy.stats import chi2_contingency,iqr,kurtosis,median_abs_deviation,mode,pearsonr,spearmanr,skew; 
-from tensorflow.keras import layers, models, losses; 
+from statistics import mode; from tensorflow.keras import layers, models, losses; 
 from torch.utils.data import TensorDataset, DataLoader;
 import dash; import dash_useful_components as duc; import graphviz; import math; import matplotlib.pyplot as plt; 
 import networkx as nx; import numpy as np; import numpy.random as rnd; import pandas as pd;
@@ -446,9 +446,7 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ2±σ2",style=tableStyle)
 											  ,html.Td(retVal['model'].theta_[idx][1]+"±"+retVal['model'].var_[idx][1],style=tableStyle)]));
 			else:
-				print(retVal['model'].support_);
-				suppPred = compress(selPred, retVal['model'].support_);
-				print(suppPred);
+				suppPred = list(compress(selPred, retVal['features'].support_));
 				if (propName=='Linear-Regression'):
 					tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
 											  ,html.Td("β0",style=tableStyle)
@@ -459,7 +457,7 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 												  ,html.Td("β"+str(idx+1),style=tableStyle)
 												  ,html.Td(coef,style=tableStyle)]));
 					else:
-						tableList.append(html.Tr([html.Td(suppPred,style=tableStyle),html.Td("β1",style=tableStyle),html.Td(retVal['model'].coef_[0],style=tableStyle)]));
+						tableList.append(html.Tr([html.Td(suppPred[0],style=tableStyle),html.Td("β1",style=tableStyle),html.Td(retVal['model'].coef_[0],style=tableStyle)]));
 				elif (propName=='Linear-Discriminant-Analysis' or propName=='Logistic-Regression' or propName=='Support-Vector-Machine'):
 					tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
 											  ,html.Td("β0",style=tableStyle)
@@ -470,7 +468,7 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 												  ,html.Td("β"+str(idx+1),style=tableStyle)
 												  ,html.Td(coef,style=tableStyle)]));
 					else:
-						tableList.append(html.Tr([html.Td(suppPred,style=tableStyle),html.Td("β1",style=tableStyle),html.Td(retVal['model'].coef_[0][0],style=tableStyle)]));
+						tableList.append(html.Tr([html.Td(suppPred[0],style=tableStyle),html.Td("β1",style=tableStyle),html.Td(retVal['model'].coef_[0][0],style=tableStyle)]));
 			if ("error" in retVal.keys()):
 				errorType = "%" if binclass else "RMS";
 				tableList.append(html.Tr([html.Td("Error Rate on Training Data ("+errorType+"):",colSpan=2,style=tableStyle)
@@ -1136,13 +1134,13 @@ def genCBTPred():
 def genCBTMeas():
 	retVal = [
 		{"value":"#Basic","label":"Basic Measures","children": [
-			{"label":v,"value":v} for k,v in genFieldDict(['Basic'],df_Meas).items()
+			{"label":v,"value":v} for k,v in genFieldDict(['Basic','Ready'],df_Meas).items()
 		]}
 		,{"value":"#Advanced","label":"Advanced and Derivative Measures","children": [
-			{"label":v,"value":v} for k,v in genFieldDict(['Advanced'],df_Meas).items()
+			{"label":v,"value":v} for k,v in genFieldDict(['Advanced','Ready'],df_Meas).items()
 		]}
 		,{"value":"#Complex","label":"Complex Relationship Measures","children": [
-			{"label":v,"value":v} for k,v in genFieldDict(['Complex'],df_Meas).items()
+			{"label":v,"value":v} for k,v in genFieldDict(['Complex','Ready'],df_Meas).items()
 		]}
 	];
 	return retVal;
@@ -1278,8 +1276,13 @@ def calcCorrS(varA,varB):
     return [retV,retP];
 
 def calcCovar(varA,varB):
-    return round(np.cov(a,b)[0][1],MRL);
+    return round(np.cov(varA,varB)[0][1],MRL);
 
+def calcNormality(varA,varB): #TODO
+    retV, retP = spearmanr(varList); 
+    retV = round(retV,MRL);
+    retP = round(retP,MRL);
+    return [retV,retP];
 # END BIVARIATE MEASURES
 # BEGIN UNIVARIATE MEASURES
 def calcIQR(varList):
@@ -1305,12 +1308,6 @@ def calcMin(varList):
 
 def calcMode(varList): 
     return mode(varList);
-
-def calcNormality(varList): #TODO
-    retV, retP = spearmanr(varList); 
-    retV = round(retV,MRL);
-    retP = round(retP,MRL);
-    return [retV,retP];
 
 def calcRange(varList):
     return round(calcMax(varList)-calcMin(varList),MRL);
@@ -1358,23 +1355,27 @@ def modelSwitch(propName,valsResp,valsPred,d_Conf):
 		retVal['model'] = model;
 		modTrain = model(convNNType(trainPred)).detach().numpy().T[0];
 		modTest =  model(convNNType(testPred)).detach().numpy().T[0];
-	else:
-		if (propName=='Decision-Tree'):
-			retVal['model'] = modelDecTree(trainResp,trainPred,d_Conf);
-		elif (propName=='Linear-Discriminant-Analysis'):
-			retVal['model'] = modelLDA(trainResp,trainPred,d_Conf);
-		elif (propName=='Linear-Regression'):
-			retVal['model'] = modelLinReg(trainResp,trainPred,d_Conf);
-		elif (propName=='Logistic-Regression'):
-			retVal['model'] = modelLogReg(trainResp,trainPred,d_Conf);
-		elif (propName=='Naive-Bayes-Categorical'):
-			retVal['model'] = modelNBCat(trainResp,trainPred,d_Conf);
-		elif (propName=='Naive-Bayes-Gaussian'):
-			retVal['model'] = modelNBGauss(trainResp,trainPred,d_Conf);
-		elif (propName=='Support-Vector-Machine'):
-			retVal['model'] = modelSVM(trainResp,trainPred,d_Conf); 
+	elif (propName=='Decision-Tree'):
+		retVal['model'] = modelDecTree(trainResp,trainPred,d_Conf);
 		modTrain = retVal['model'].predict(trainPred);
 		modTest = retVal['model'].predict(testPred);
+	else:
+		if (propName=='Linear-Discriminant-Analysis'):
+			retVal['model'],retVal['features'] = modelLDA(trainResp,trainPred,d_Conf);
+		elif (propName=='Linear-Regression'):
+			retVal['model'],retVal['features'] = modelLinReg(trainResp,trainPred,d_Conf);
+		elif (propName=='Logistic-Regression'):
+			retVal['model'],retVal['features'] = modelLogReg(trainResp,trainPred,d_Conf);
+		elif (propName=='Naive-Bayes-Categorical'):
+			retVal['model'],retVal['features'] = modelNBCat(trainResp,trainPred,d_Conf);
+		elif (propName=='Naive-Bayes-Gaussian'):
+			retVal['model'],retVal['features'] = modelNBGauss(trainResp,trainPred,d_Conf);
+		elif (propName=='Support-Vector-Machine'):
+			retVal['model'],retVal['features'] = modelSVM(trainResp,trainPred,d_Conf);
+		trainPredTF = retVal['features'].transform(trainPred);
+		testPredTF = retVal['features'].transform(testPred);
+		modTrain = retVal['model'].predict(trainPredTF);
+		modTest = retVal['model'].predict(testPredTF);
 	retVal['error'] = {};
 	retVal['error']['train'] = assessErr(trainResp.to_numpy(),modTrain,binclass);
 	retVal['error']['test'] = assessErr(testResp.to_numpy(),modTest,binclass);
@@ -1393,37 +1394,61 @@ def modelDecTree(resp,pred,d_Conf):
 def modelLDA(resp,pred,d_Conf):
 	estimator = lda.LinearDiscriminantAnalysis(tol=d_Conf['LearnRate']); 
 	estimator.fit(pred,resp);
-	model = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);    
-	return model;
+	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
+	predFS = featureSelect.transform(pred);
+	fMask = featureSelect.support_;
+	model = lda.LinearDiscriminantAnalysis(tol=d_Conf['LearnRate']); 
+	model.fit(predFS,resp);
+	return model,featureSelect;
 
 def modelLinReg(resp,pred,d_Conf):
 	estimator = lm.LinearRegression(fit_intercept=d_Conf['Intercept']);
 	estimator.fit(pred,resp);
-	model = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);    
-	return model;
+	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
+	predFS = featureSelect.transform(pred);
+	fMask = featureSelect.support_;
+	model = lm.LinearRegression(fit_intercept=d_Conf['Intercept']);
+	model.fit(predFS,resp);
+	return model,featureSelect;
 
 def modelLogReg(resp,pred,d_Conf):
 	estimator = lm.LogisticRegression(fit_intercept=d_Conf['Intercept'],max_iter=d_Conf['Magnitude']);
 	estimator.fit(pred,resp);
-	model = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);    
-	return model;
+	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
+	predFS = featureSelect.transform(pred);
+	fMask = featureSelect.support_;
+	model = lm.LogisticRegression(fit_intercept=d_Conf['Intercept'],max_iter=d_Conf['Magnitude']);
+	model.fit(predFS,resp);    
+	return model,featureSelect;
 
 def modelNBCat(resp,pred,d_Conf):
 	estimator = nb.CategoricalNB();
 	estimator.fit(pred,resp);
-	model = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);    
-	return model;
+	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
+	predFS = featureSelect.transform(pred);
+	fMask = featureSelect.support_;
+	model = nb.CategoricalNB();
+	model.fit(predFS,resp);    
+	return model,featureSelect;
 
 def modelNBGauss(resp,pred,d_Conf):
-	model = nb.GaussianNB(); 
-	model.fit(pred,resp);
-	return model;
+	estimator = nb.GaussianNB();
+	estimator.fit(pred,resp);
+	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
+	predFS = featureSelect.transform(pred);
+	fMask = featureSelect.support_;
+	model = nb.GaussianNB();
+	model.fit(predFS,resp);    
+	return model,featureSelect;
 
 def modelSVM(resp,pred,d_Conf):
 	estimator = svm.SVC(kernel='linear',max_iter=d_Conf['Magnitude'],tol=d_Conf['LearnRate']);
 	estimator.fit(pred,resp);
-	model = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);    
-	return model;
+	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
+	predFS = featureSelect.transform(pred);
+	model = svm.SVC(kernel='linear',max_iter=d_Conf['Magnitude'],tol=d_Conf['LearnRate']);
+	model.fit(predFS,resp);    
+	return model,featureSelect;
 
 def convNNType(df):
     return torch.from_numpy(df.values).float();
