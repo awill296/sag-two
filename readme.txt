@@ -74,7 +74,8 @@ C06. Measures:
 						Relative Standard Deviation ( std/mean )
 C07. Propositions: Lasso, Linear Discriminant Analysis; Naive-Bayes (Gaussian); Support Vector Machine
 C08. Add Autumn burst data from MATLAB
-T00. Update Measures and Predictors to be collapsible trees instead of Checklists
+C00. Update Measures and Predictors to be collapsible trees instead of Checklists
+T00. Make Histograms optional
 T00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
             , Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
             , Univariate: Box-and-whisker plot
