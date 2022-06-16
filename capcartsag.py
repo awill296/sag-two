@@ -1269,10 +1269,11 @@ def calcSwitch(measName,varA,varB=[]):
 # BEGIN MEASURE-SPECIFIC FUNCTIONS
 # BEGIN BIVARIATE MEASURES
 def calcChiSq(varA,varB):
-    retV, retP, _, _ = chi2_contingency(np.array([varA,varB]), correction=False);
-    retV = round(retV,MRL);
-    retP = round(retP,MRL);
-    return [retV,retP];
+	catA = [sum(varA),len(varA)-sum(varA)]; catB = [sum(varB),len(varB)-sum(varB)];
+	retV, retP, _, _ = chi2_contingency(np.array([catA,catB]), correction=False);
+	retV = round(retV,MRL);
+	retP = round(retP,MRL);
+	return [retV,retP];
 
 def calcCorrP(varA,varB):
     retV, retP = pearsonr(varA,varB); 
