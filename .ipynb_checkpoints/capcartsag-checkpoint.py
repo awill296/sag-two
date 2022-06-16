@@ -369,30 +369,28 @@ def genMeasCB(selResp,selPred,selMeas, n_clicks):
 			selMeasUni = setInt(selMeas,list(uniList.values()));
 			if (selPred is not None):
 				selPred.sort(); #TODO: Rearrange the results table to have pred variables be rows and meas be columns 
-				measVal = genMeas(selResp, selPred, selMeas);
+				measVal = genMeas(selResp, selPred, selMeas); respcols = []; resultsR = [];
 				headerR = [html.Th('Response Variable Measures',colSpan=max(len(selMeasUni),1),style=tableStyle)];
-				subheaderR = [html.Td(namesResp[selResp],colSpan=len(selMeasUni),style=tableStyle)]; 
-				header = [html.Th('Predictor Variable Measures',colSpan=(len(selPred)*len(selMeas)),style=tableStyle)];
-				subheader = [];
-				for key in measVal['pred'].keys():
-					subheader.append(html.Td(key,colSpan=len(selMeas),style=tableStyle));
-				predcols = []; respcols = [];
+				subheaderR = [html.Td(namesResp[selResp],colSpan=len(selMeasUni),style=tableStyle)];
 				if (len(selMeasUni)<1):
 					respcols.append(html.Td('',style=tableStyle));
 				else:
 					for respK in measVal['resp'].keys():
 						respcols.append(html.Td(respK,style=tableStyle));
-				for predV in measVal['pred'].values():
-					for key in predV:
-						predcols.append(html.Td(key,style=tableStyle));
-				resultsR = []; resultsP = [];
 				for respV in measVal['resp'].values():
 					resultsR.append(html.Td(respV,style=tableStyle));
-				for predV in measVal['pred'].values():
-					for key in predV:
-						resultsP.append(html.Td(predV[key],style=tableStyle));
-				retVal = html.Tbody([html.Tr(headerR),html.Tr(subheaderR),html.Tr(respcols),html.Tr(resultsR)
-									,html.Tr(header),html.Tr(subheader),html.Tr(predcols),html.Tr(resultsP)]);
+				rowsR = [html.Tr(headerR),html.Tr(subheaderR),html.Tr(respcols),html.Tr(resultsR)];
+				headerP = [html.Th('Predictor Variable Measures',colSpan=(len(selPred)*len(selMeas)),style=tableStyle)];
+				rowsP = [html.Tr(headerP)]; subheaderP = [html.Th('')]; 
+				for predH in (list(measVal['pred'].values())[0]):
+					subheaderP.append(html.Th(predV,style=tableStyle));
+				rowsP.append(html.Tr(subheaderP))
+				for ik,iv in measVal['pred'].items():
+					rowP = [html.Th(ik,style=tableStyle)];
+					for jk,jv in iv.items():
+						rowP.append(html.Td(jv,style=tableStyle));
+					rowsP.append(html.Tr(rowP));
+				retVal = html.Tbody(rowsR+html.Tr([html.Td("",colSpan='100%')])+rowsP);
 			else:
 				measVal = genMeas(selResp, [], selMeas);
 				header = [html.Th('Response Variable Measures',colSpan=len(selMeasUni),style=tableStyle)];
