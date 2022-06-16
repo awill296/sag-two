@@ -27,7 +27,7 @@ MRL = 3; #Measure Rounding Level
 folder = "datasources"; files = ["cohorts.csv","datafile.csv","measures.csv","propositions.csv","schema.csv"]
 subtitles = {'Title1':"Thakor Lab",
 			'Title2':"Cerebrovascular Autoregulation and Post-Cardiac Arrest Resuscitation Therapies Team",
-			'Title3':"Statistical Analysis GUI, v1.0",
+			'Title3':"Statistical Analysis GUI, v1.5",
 			'Step00':"Select Response Variable: ", 'Step04':"Check Predictor Variable(s) to test: ",
 			'Step06':"Select Measures to Display: ", 'Step07':"Select Model Proposition to Calculate: ",
 			'Step09':"Enter the Configuration Settings for the selected model (default values pre-entered): ",
@@ -49,7 +49,7 @@ app = dash.Dash(__name__, suppress_callback_exceptions=True);
 def serve_layout():
 	loadData();
 	return html.Div([
-		#html.H2(subtitles['Title1']),
+		html.H2(subtitles['Title1']),
 		#html.H2(subtitles['Title2']),
 		html.H2(subtitles['Title3']),
 		html.Div(style={'visibility': 'visible'},children=[

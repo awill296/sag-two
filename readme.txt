@@ -1,10 +1,10 @@
 """
-#. Introductory Video: < https://youtu.be/2sYbTEF___c >
+#. Introductory Video to v1: < https://youtu.be/2sYbTEF___c >
 
 #. How to Run this App:
 00. Open Terminal
 01. Cast "python capcartsag.py"
-02. Open browser to http://jupyter.biostat.jhsph.edu:[X]/, [X] is your os.getuid()+30
+02. Open browser to http://localhost:8889
 
 Note: The file backdraft.ipynb is for logic function development purposes and is not integrated with the app itself.
 
@@ -35,57 +35,57 @@ Note: Selection of Predictor variables and Measures is optional.
 	If user has not selected any Measures, none will be displayed.
 	If user has not selected any Predictor variables, 
 		the System will display the requested Measures 
-		for the Predictor variable alone and not calculate a Proposition.
+		for the Response variable alone and not calculate a Proposition.
 
-#. Available Items in v2:
-00. Response Variables: HR @60 min; MAP @60min; NDS
-        NDS Subscores (Behavior, Brainstem_Function, General_Behavioral
-            , Motor_Assessment, Motor_Behavior, Seizures, Sensory_Assessment)
-01. Predictor Variables: HR @20,40 min; MAP @20,40min; Burst Period Start, End, and Duration;
+#. Available Items as of v1.5:
+00. Response Variables: NDS and Subscores 
+			(Behavior, Brainstem_Function, General_Behavioral
+            , Motor_Assessment, Motor_Behavior, Seizures, Sensory_Assessment
+			, High/Low binary forms of each where applicable)
+01. Predictor Variables: HR @20,40,60 min; MAP @20,40,60 min; 
+		Burst Period Start, End, and Duration; Burst Count, Duration Max, Duration Percent, Duration Max Percent, High/Low binary forms for each
         Electrode {1,2}>{Power,Shannon Entropy,Tsallis Entropy,Power Fraction,Shannon Entropy Fraction, Tsallis Entropy Fraction}
             >{Delta,Theta,Alpha,Beta,Gamma,SuperGamma}>{AUC,IQR,MAD,Max,Mean,Median,Min,Range,Spot,STD}>@20,40,60Mins
-02. Measures: Mean, Standard Deviation, Spearman's Rank Correlation Coefficient, Pearson Correlation Coefficient
-03. Propositions: Linear Regression, Logistic Regression, Neural Network
+02. Measures: 
+			Bivariate: Chi-Squared Test of Independence of Categorical Variables
+						, Spearman's Rank Correlation Coefficient,  
+			Univariate: IQR, Kurtosis, Max, Mean, Min, Mode, Range, Skew
+						Median Absolute Deviation (median of abs dev from median)
+						Relative Standard Deviation ( std/mean )
+03. Propositions: Lasso Regression, Linear Discriminant Analysis, Linear Regression, Logistic Regression
+					Naive Bayes (Gaussian), Neural Network, Support Vector Machine
+					Note: LDA, LinReg, LogReg, and SVM have automated iterative feature selection
 05. Model Configuration Settings: 
 	All: Random Seed, Percent of Data to use in Training vs Testing 
+	Lasso Regression: Inclusion of Intercept, Magnitude of Iteration Limit, Tolerance of Learning Rate
+	Linear Discriminant Analysis: Binarization Threshold Percent, Tolerance of Learning Rate
 	Linear Regression: Inclusion of Intercept
 	Logistic Regression: Inclusion of Intercept, Magnitude of Iteration Limit, Binarization Threshold Percent 
+	Naive Bayes (Gaussian): Binarization Threshold Percent
 	Neural Network: Iteration Limit, Number of Layers, Nodes per Layer
+	Support Vector Machine: Inclusion of Intercept, Magnitude of Iteration Limit, Binarization Threshold Percent, Tolerance of Learning Rate
 06. Proposition Details:
 	All: Error Rate on Training and Test data, ROC Curve on Training and Test data  
-	Linear Regression: Coefficient and Intercept values
-	Logistic Regression: Coefficient and Intercept values 
 	Neural Network: Weights
-
-Warning: Due to the low sample size of data available in v1, changes to the Random Seed, 
+	Naive Bayes: Theta, Variance, Epsilon
+	All others: Coefficient and Intercept values
+	
+Warning: Due to the low sample size of data available in v1.5, changes to the Random Seed, 
 	Percent Training Data, and Binarization Threshold Percent may cause errors 
 	due to insufficient data variation. 
 
 #. Items in-progress for v2:
-C01. Add Ziwei burst data
-C02. Add NDS subscores from YuGuo datasheets
-C03. Add EEG Predictor and Response Variables from YuGuo data
-C04. Add full list of available subjects and ready marker to datafile
-C05. Add variable arguments to genfielddict 
-C06. Measures: 
-            Bivariate: Chi-Square Test, Covariance
-            Univariate simple: Mode, Mean, IQR, Range, Min, Max, Skew, Kurtosis
-            Univariate: Median Absolute Deviation (median of abs dev from median), 
-						Relative Standard Deviation ( std/mean )
-C07. Propositions: Lasso, Linear Discriminant Analysis; Naive-Bayes (Gaussian); Support Vector Machine
-C08. Add Autumn burst data from MATLAB
-C00. Update Measures and Predictors to be collapsible trees instead of Checklists
-T00. Make Histograms optional
-T00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
+00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
             , Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
             , Univariate: Box-and-whisker plot
             , Bivariate: Scatter Plots
+00. Add setting to choose graph display: Histograms, Box-whisker, Scatter Plots, or None
+00. Add model configuration setting to change limit on iterative feature selection
+00. Add setting to make iterative feature selection optional
 00. Applying Measures and Propositions only with appropriate variable Level of Measurement 
 00. Predictor variables listed only when causally or logically valid for chosen Response variable
 00. Expand list of available Response variables
-
-#. Delayed
-00. Measures: Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables) 
+00. Measures: Covariance, Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables) 
 00. Propositions: Decision Tree, Naive-Bayes (Categorical)
 
 #. Items Planned for future versions:
