@@ -436,16 +436,6 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 					if(not isinstance(layer,type(nn.ReLU()))):
 						tableList.append(html.Tr([html.Td("Layer " + str(idx+1) + " weights:",style=tableStyle)
 												  ,html.Td(layer.weight.detach().numpy().T,style=tableStyle)]));
-			elif (propName=='Naive-Bayes-Gaussian'):
-				tableList.append(html.Tr([html.Td("additive variance value",style=tableStyle)
-										  ,html.Td("ε",style=tableStyle)
-										  ,html.Td(retVal['model'].epsilon_[0],style=tableStyle)]));
-				for pred,idx in zip(suppPred,range(len(suppPred))):
-					tableList.append(html.Tr([html.Td(pred,style=tableStyle,colSpan="100%")]));
-					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ1±σ1",style=tableStyle)
-											  ,html.Td(retVal['model'].theta_[idx][0]+"±"+retVal['model'].var_[idx][0],style=tableStyle)]));
-					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ2±σ2",style=tableStyle)
-											  ,html.Td(retVal['model'].theta_[idx][1]+"±"+retVal['model'].var_[idx][1],style=tableStyle)]));
 			elif (propName=='Lasso-Regression'):
 				tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
 											  ,html.Td("β0",style=tableStyle)
@@ -454,6 +444,16 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 					tableList.append(html.Tr([html.Td(pred,style=tableStyle)
 									,html.Td("β"+str(idx+1),style=tableStyle)
 									,html.Td(coef,style=tableStyle)]));
+			elif (propName=='Naive-Bayes-Gaussian'):
+				tableList.append(html.Tr([html.Td("additive variance value",style=tableStyle)
+										  ,html.Td("ε",style=tableStyle)
+										  ,html.Td(retVal['model'].epsilon_,style=tableStyle)]));
+				for pred,idx in zip(selPred,range(len(selPred))):
+					tableList.append(html.Tr([html.Td(pred,style=tableStyle,colSpan="100%")]));
+					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ1±σ1",style=tableStyle)
+											  ,html.Td(str(retVal['model'].theta_[0][idx])+"±"+str(retVal['model'].var_[0][idx]),style=tableStyle)]));
+					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ2±σ2",style=tableStyle)
+											  ,html.Td(str(retVal['model'].theta_[1][idx])+"±"+str(retVal['model'].var_[1][idx]),style=tableStyle)]));
 			else:
 				suppPred = list(compress(selPred, retVal['features'].support_));
 				if (propName=='Linear-Regression'):
@@ -1366,6 +1366,10 @@ def modelSwitch(propName,valsResp,valsPred,d_Conf):
 		retVal['model'] = model;
 		modTrain = model(convNNType(trainPred)).detach().numpy().T[0];
 		modTest =  model(convNNType(testPred)).detach().numpy().T[0];
+	elif (propName=='Naive-Bayes-Gaussian'):
+		retVal['model'] = modelNBGauss(trainResp,trainPred,d_Conf);
+		modTrain = retVal['model'].predict(trainPred);
+		modTest = retVal['model'].predict(testPred);
 	elif (propName=='Lasso-Regression'):
 		retVal['model'] = modelLasso(trainResp,trainPred,d_Conf);
 		modTrain = retVal['model'].predict(trainPred);
@@ -1383,8 +1387,6 @@ def modelSwitch(propName,valsResp,valsPred,d_Conf):
 			retVal['model'],retVal['features'] = modelLogReg(trainResp,trainPred,d_Conf);
 		elif (propName=='Naive-Bayes-Categorical'):
 			retVal['model'],retVal['features'] = modelNBCat(trainResp,trainPred,d_Conf);
-		elif (propName=='Naive-Bayes-Gaussian'):
-			retVal['model'],retVal['features'] = modelNBGauss(trainResp,trainPred,d_Conf);
 		elif (propName=='Support-Vector-Machine'):
 			retVal['model'],retVal['features'] = modelSVM(trainResp,trainPred,d_Conf);
 		trainPredTF = retVal['features'].transform(trainPred);
@@ -1448,13 +1450,9 @@ def modelNBCat(resp,pred,d_Conf):
 	return model,featureSelect;
 
 def modelNBGauss(resp,pred,d_Conf):
-	estimator = nb.GaussianNB();
-	estimator.fit(pred,resp);
-	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
-	predFS = featureSelect.transform(pred);
 	model = nb.GaussianNB();
-	model.fit(predFS,resp);    
-	return model,featureSelect;
+	model.fit(pred,resp);    
+	return model;
 
 def modelSVM(resp,pred,d_Conf):
 	estimator = svm.SVC(kernel='linear',max_iter=d_Conf['Magnitude'],tol=d_Conf['LearnRate']);
