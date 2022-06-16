@@ -448,6 +448,14 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 											  ,html.Td(retVal['model'].theta_[idx][0]+"±"+retVal['model'].var_[idx][0],style=tableStyle)]));
 					tableList.append(html.Tr([html.Td(" ",style=tableStyle),html.Td("θ2±σ2",style=tableStyle)
 											  ,html.Td(retVal['model'].theta_[idx][1]+"±"+retVal['model'].var_[idx][1],style=tableStyle)]));
+			elif (propName=='Lasso-Regression'):
+				tableList.append(html.Tr([html.Td("(intercept)",style=tableStyle)
+											  ,html.Td("β0",style=tableStyle)
+											  ,html.Td(retVal['model'].intercept_,style=tableStyle)]));
+				for coef,pred,idx in zip(retVal['model'].coef_,selPred,range(len(retVal['model'].coef_))):
+					tableList.append(html.Tr([html.Td(pred,style=tableStyle)
+									,html.Td("β"+str(idx+1),style=tableStyle)
+									,html.Td(coef,style=tableStyle)]));
 			else:
 				suppPred = list(compress(selPred, retVal['features'].support_));
 				if (propName=='Linear-Regression'):
@@ -1358,6 +1366,10 @@ def modelSwitch(propName,valsResp,valsPred,d_Conf):
 		retVal['model'] = model;
 		modTrain = model(convNNType(trainPred)).detach().numpy().T[0];
 		modTest =  model(convNNType(testPred)).detach().numpy().T[0];
+	elif (propName=='Lasso-Regression'):
+		retVal['model'] = modelLasso(trainResp,trainPred,d_Conf);
+		modTrain = retVal['model'].predict(trainPred);
+		modTest = retVal['model'].predict(testPred);
 	elif (propName=='Decision-Tree'):
 		retVal['model'] = modelDecTree(trainResp,trainPred,d_Conf);
 		modTrain = retVal['model'].predict(trainPred);
@@ -1394,12 +1406,16 @@ def modelDecTree(resp,pred,d_Conf):
 	model.fit(pred,resp);
 	return model;
 
+def modelLasso(resp,pred,d_Conf):
+	model = lm.Lasso(fit_intercept=d_Conf['Intercept'],max_iter=d_Conf['Magnitude'],tol=d_Conf['LearnRate']); 
+	model.fit(pred,resp);
+	return model;
+
 def modelLDA(resp,pred,d_Conf):
 	estimator = lda.LinearDiscriminantAnalysis(tol=d_Conf['LearnRate']); 
 	estimator.fit(pred,resp);
 	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
 	predFS = featureSelect.transform(pred);
-	fMask = featureSelect.support_;
 	model = lda.LinearDiscriminantAnalysis(tol=d_Conf['LearnRate']); 
 	model.fit(predFS,resp);
 	return model,featureSelect;
@@ -1409,7 +1425,6 @@ def modelLinReg(resp,pred,d_Conf):
 	estimator.fit(pred,resp);
 	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
 	predFS = featureSelect.transform(pred);
-	fMask = featureSelect.support_;
 	model = lm.LinearRegression(fit_intercept=d_Conf['Intercept']);
 	model.fit(predFS,resp);
 	return model,featureSelect;
@@ -1419,7 +1434,6 @@ def modelLogReg(resp,pred,d_Conf):
 	estimator.fit(pred,resp);
 	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
 	predFS = featureSelect.transform(pred);
-	fMask = featureSelect.support_;
 	model = lm.LogisticRegression(fit_intercept=d_Conf['Intercept'],max_iter=d_Conf['Magnitude']);
 	model.fit(predFS,resp);    
 	return model,featureSelect;
@@ -1429,7 +1443,6 @@ def modelNBCat(resp,pred,d_Conf):
 	estimator.fit(pred,resp);
 	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
 	predFS = featureSelect.transform(pred);
-	fMask = featureSelect.support_;
 	model = nb.CategoricalNB();
 	model.fit(predFS,resp);    
 	return model,featureSelect;
@@ -1439,7 +1452,6 @@ def modelNBGauss(resp,pred,d_Conf):
 	estimator.fit(pred,resp);
 	featureSelect = RFECV(estimator,min_features_to_select=2,cv=2).fit(pred,resp);
 	predFS = featureSelect.transform(pred);
-	fMask = featureSelect.support_;
 	model = nb.GaussianNB();
 	model.fit(predFS,resp);    
 	return model,featureSelect;

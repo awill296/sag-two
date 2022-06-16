@@ -67,28 +67,29 @@ C02. Add NDS subscores from YuGuo datasheets
 C03. Add EEG Predictor and Response Variables from YuGuo data
 C04. Add full list of available subjects and ready marker to datafile
 C05. Add variable arguments to genfielddict 
-V00. Measures: 
+C06. Measures: 
             Bivariate: Chi-Square Test, Covariance
             Univariate simple: Mode, Mean, IQR, Range, Min, Max, Skew, Kurtosis
             Univariate: Median Absolute Deviation (median of abs dev from median), 
 						Relative Standard Deviation ( std/mean )
-			Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables)
-V00. Propositions: Linear Discriminant Analysis; Naive-Bayes (Gaussian); Support Vector Machine
+C07. Propositions: Lasso, Linear Discriminant Analysis; Naive-Bayes (Gaussian); Support Vector Machine
+C08. Add Autumn burst data from MATLAB
 T00. Update Measures and Predictors to be collapsible trees instead of Checklists
 T00. Display: Scatter plot(s) for Proposition:Linear Regression, Proposition:LDA, Proposition:SVM
             , Node-Graph for Proposition:Decision Tree and Proposition:Neural Network
             , Univariate: Box-and-whisker plot
             , Bivariate: Scatter Plots
-G00. Add Autumn burst data from MATLAB
 00. Applying Measures and Propositions only with appropriate variable Level of Measurement 
 00. Predictor variables listed only when causally or logically valid for chosen Response variable
 00. Expand list of available Response variables
 
-#. Delayed To v3
+#. Delayed
+00. Measures: Normality (display Jarque-Bera, Lilliefors, and Shapiro-Wilk results on all variables) 
 00. Propositions: Decision Tree, Naive-Bayes (Categorical)
 
 #. Items Planned for future versions:
-v3. time series analysis, functions of data as predictor and response variables (e.g. entropy), more model configuration settings
+v3. create executable, time series analysis, functions of data as predictor and response variables (e.g. entropy), 
+	, more model configuration settings (feature select)
 	, proposition tutorials (feature request), model R^2 (feature request), experimental cohort selection (feature request)
 v4 (draft). replace csvs with database of experimental data, ability to download results, add login security (feature request)
 v5 (draft). additional validation methods, additional propositions, model stacking
