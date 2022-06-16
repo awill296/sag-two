@@ -77,7 +77,7 @@ def serve_layout():
 		html.Div(style={'visibility':'hidden'}, children=[
 			html.H3(subtitles['Step07']),
 			dcc.Dropdown( options= [{'label': v, 'value': k} for k, v in namesProp.items()]
-						 ,id={'type':'selector-uni', 'role':'choice', 'index': 'prop'},value = 2),
+						 ,id={'type':'selector-uni', 'role':'choice', 'index': 'prop'},value = 1),
 			html.Button('Submit', id={'type':'button', 'role': 'submit', 'index': 'prop'}, n_clicks=0)
 		], id={'type':'div', 'role': 'prompt', 'index': 'meas'}),
 		html.Div([
@@ -121,7 +121,7 @@ def serve_layout():
 							html.Td([
 								html.Div(style={'visibility':'hidden'}, children=[
 									html.Span(subtitles['Step09.03']),
-									dcc.RadioItems(options = [{'label': 'Yes', 'value': 1},{'label': 'No', 'value': 0}],value = 1
+									dcc.RadioItems(options = [{'label': 'Yes', 'value': 1},{'label': 'No', 'value': 0}],value = 0
 												   , id = {'type':'selector-uni', 'role':'conf', 'index': 'intercept'})
 									], title='Intercept', id={'type':'div', 'role': 'conf', 'index': 'intercept'}),
 							]),
@@ -383,14 +383,14 @@ def genMeasCB(selResp,selPred,selMeas, n_clicks):
 				headerP = [html.Th('Predictor Variable Measures',colSpan=(len(selPred)*len(selMeas)),style=tableStyle)];
 				rowsP = [html.Tr(headerP)]; subheaderP = [html.Th('')]; 
 				for predH in (list(measVal['pred'].values())[0]):
-					subheaderP.append(html.Th(predV,style=tableStyle));
+					subheaderP.append(html.Th(predH,style=tableStyle));
 				rowsP.append(html.Tr(subheaderP))
 				for ik,iv in measVal['pred'].items():
 					rowP = [html.Th(ik,style=tableStyle)];
 					for jk,jv in iv.items():
 						rowP.append(html.Td(jv,style=tableStyle));
 					rowsP.append(html.Tr(rowP));
-				retVal = html.Tbody(rowsR+html.Tr([html.Td("",colSpan='100%')])+rowsP);
+				retVal = html.Tbody(rowsR+[html.Tr([html.Td("",colSpan='100%')])]+rowsP);
 			else:
 				measVal = genMeas(selResp, [], selMeas);
 				header = [html.Th('Response Variable Measures',colSpan=len(selMeasUni),style=tableStyle)];
@@ -499,8 +499,10 @@ def genModelCB(selResp, selPred, selProp, confSeed, confTPct, confInt, confMag, 
 def genCBTPred():
 	retVal = [
 		{"value":"#Burst","label":"Burst Measures","children": [
-			{"value":"#Elec1B","label":"Burst Electrode 1","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec1'],df_Schema).items()]}
-		   ,{"value":"#Elec2B","label":"Burst Electrode 2","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec2'],df_Schema).items()]}
+			{"value":"#Elec1B","label":"Burst Electrode 1","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec1','!Is_HighLow'],df_Schema).items()]}
+		   ,{"value":"#Elec1BHL","label":"Burst Electrode 1 - High/Low","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec1','Is_HighLow'],df_Schema).items()]}
+		   ,{"value":"#Elec2B","label":"Burst Electrode 2","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec2','!Is_HighLow'],df_Schema).items()]}
+		   ,{"value":"#Elec2BHL","label":"Burst Electrode 2 - High/Low","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_Burst','Is_Elec2','Is_HighLow'],df_Schema).items()]}
 		]}
 	   ,{"value":"#ECG","label":"ECG and Derived Values","children": [
 			{"value":"#Is_20Mins","label":"Measures at 20 Mins","children":[{"label":v,"value":v} for k,v in genFieldDict(['Is_ECG','Is_20Mins'],df_Schema).items()]}
